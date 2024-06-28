@@ -23,47 +23,26 @@ main :: proc(){
     player.color = rl.Color{125, 255, 207, 255}
     player.speed.x = 400.0
 
-    /*
-    max_dist := rl.Vector2{100.0, 40.0}
-    player.start_vert_speed = 2 * max_dist.y * player.speed.x / max_dist.x
-    player.speed.y = player.start_vert_speed
-    player.g = 2 * max_dist.y * player.speed.x * player.speed.x / (max_dist.x * max_dist.x)
-    */
-
     jump_height:f32 = 200.0
-    jump_time: f32 = 1.0
-    starting_y := player.pos.y
-    on_floor := true
+    jump_dist: f32 = 150.0
 
-    g := - 2 * jump_height / (jump_time * jump_time)
-    v := 2 * jump_height / jump_time
+    player.start_vert_speed = 2 * jump_height * player.speed.x / jump_dist
+    player.g = - 2 * jump_height * (player.speed.x * player.speed.x) / (jump_dist * jump_dist)
 
     rect := get_rect(player.pos, player.size)
 
     for !rl.WindowShouldClose(){
 
-        //player_update(&player)
-        dt := rl.GetFrameTime()
-        if rl.IsKeyPressed(.SPACE){
-            on_floor = false
-            v = 2 * jump_height / jump_time
-        }
-
-        if !on_floor{
-            player.pos.y -= 0.5 * g * dt * dt + v * dt
-            v += g * dt
-        }
-
-        if player.pos.y > starting_y{
-            player.pos.y = starting_y
-            on_floor = true
-        }
+        player_update(&player)
+        fmt.println(player.pos.y, player.speed.y, player.g)
 
         rl.BeginDrawing()
         rl.ClearBackground(rl.BLACK)
 
         player_render(player)
-        rl.DrawRectangleRec({rect.x - 150.0, rect.y + rect.height - jump_height, 50.0, jump_height}, rl.WHITE)
+        rl.DrawRectangleRec({0.0, Height - 100.0 + player.size, Width, 100.0}, rl.WHITE)
+        rl.DrawRectangleRec({200.0, Height - 100.0 + player.size, 200 + jump_dist, 100.0}, rl.RED)
+        rl.DrawRectangleRec({200.0, Height - 100.0 + player.size - jump_height, 250.0, jump_height}, rl.RED)
 
         rl.EndDrawing()
     }

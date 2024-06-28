@@ -13,7 +13,7 @@ Player :: struct{
     start_vert_speed: f32,
     g: f32,
 
-    hit_floor: bool,
+    on_floor: bool,
 }
 
 player_rect :: proc(p: Player) -> rl.Rectangle{
@@ -30,6 +30,20 @@ player_update :: proc(p: ^Player){
         p.pos.x -= p.speed.x * dt
     }
 
+    if rl.IsKeyPressed(.SPACE){
+        p.on_floor = false
+        p.speed.y = p.start_vert_speed
+    }
+
+    if !p.on_floor{
+        p.pos.y -= 0.5 * p.g * dt * dt + p.speed.y * dt
+        p.speed.y += p.g * dt
+    }
+
+    if p.pos.y > Height - 100.0{
+        p.pos.y = Height - 100.0
+        p.on_floor = true
+    }
 }
 
 player_render :: proc(p: Player){

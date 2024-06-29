@@ -23,7 +23,7 @@ player_rect :: proc(p: Player) -> rl.Rectangle{
     return rl.Rectangle{p.pos.x, p.pos.y, p.size, p.size}
 }
 
-player_update :: proc(p: ^Player){
+player_update :: proc(p: ^Player, mo: ^MoveOutline){
     dt := rl.GetFrameTime()
 
     if rl.IsKeyDown(.D){
@@ -49,12 +49,19 @@ player_update :: proc(p: ^Player){
         else{
             p.g = p.gravity_landing
         }
+
+        fmt.println("hi")
+        move_outline_record(mo, get_center(p.pos, p.size))
     }
 
     if p.pos.y > Height - 100.0{
         p.pos.y = Height - 100.0
         p.on_floor = true
+
+        fmt.println("bye")
+        move_outline_record_breakpoint(mo)
     }
+
 }
 
 player_render :: proc(p: Player){

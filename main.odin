@@ -33,28 +33,26 @@ main :: proc(){
 
     rect := get_rect(player.pos, player.size)
 
-    move_outline: [dynamic]rl.Vector2
+    player_mo := move_outline_create()
 
     for !rl.WindowShouldClose(){
 
-        player_update(&player)
-        append(&move_outline, player.pos)
+        player_update(&player, &player_mo)
 
         rl.BeginDrawing()
         rl.ClearBackground(rl.BLACK)
 
-        for i in 0..<len(move_outline) - 1{
-            rl.DrawLineV(move_outline[i], move_outline[i + 1], rl.WHITE)
-        }
 
         player_render(player)
         rl.DrawRectangleRec({0.0, Height - 100.0 + player.size, Width, 100.0}, rl.WHITE)
         //rl.DrawRectangleRec({200.0, Height - 100.0 + player.size, 200 + jump_dist, 100.0}, rl.RED)
         //rl.DrawRectangleRec({200.0, Height - 100.0 + player.size - jump_height, 250.0, jump_height}, rl.RED)
+        move_outline_render(player_mo)
 
         rl.EndDrawing()
     }
-    delete(move_outline)
+    delete(player_mo.buf)
+    delete(player_mo.breakpoints)
 
     rl.CloseWindow()
 

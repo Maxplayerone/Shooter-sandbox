@@ -33,12 +33,19 @@ main :: proc(){
 
     rect := get_rect(player.pos, player.size)
 
+    move_outline: [dynamic]rl.Vector2
+
     for !rl.WindowShouldClose(){
 
         player_update(&player)
+        append(&move_outline, player.pos)
 
         rl.BeginDrawing()
         rl.ClearBackground(rl.BLACK)
+
+        for i in 0..<len(move_outline) - 1{
+            rl.DrawLineV(move_outline[i], move_outline[i + 1], rl.WHITE)
+        }
 
         player_render(player)
         rl.DrawRectangleRec({0.0, Height - 100.0 + player.size, Width, 100.0}, rl.WHITE)
@@ -47,6 +54,7 @@ main :: proc(){
 
         rl.EndDrawing()
     }
+    delete(move_outline)
 
     rl.CloseWindow()
 

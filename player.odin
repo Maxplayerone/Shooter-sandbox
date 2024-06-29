@@ -11,7 +11,10 @@ Player :: struct{
     pos: rl.Vector2,
     speed: rl.Vector2,
     start_vert_speed: f32,
+
     g: f32,
+    gravity_landing: f32,
+    gravity_jumping: f32,
 
     on_floor: bool,
 }
@@ -33,11 +36,19 @@ player_update :: proc(p: ^Player){
     if rl.IsKeyPressed(.SPACE){
         p.on_floor = false
         p.speed.y = p.start_vert_speed
+        p.g = p.gravity_jumping
     }
 
     if !p.on_floor{
         p.pos.y -= 0.5 * p.g * dt * dt + p.speed.y * dt
         p.speed.y += p.g * dt
+
+        if p.speed.y > 0{
+            p.g = p.gravity_jumping
+        }
+        else{
+            p.g = p.gravity_landing
+        }
     }
 
     if p.pos.y > Height - 100.0{

@@ -28,21 +28,22 @@ main :: proc(){
 
     player.start_vert_speed = 2 * jump_height * player.speed.x / jump_dist
     player.g = - 2 * jump_height * (player.speed.x * player.speed.x) / (jump_dist * jump_dist)
+    player.gravity_jumping = player.g
+    player.gravity_landing = 2 * player.g
 
     rect := get_rect(player.pos, player.size)
 
     for !rl.WindowShouldClose(){
 
         player_update(&player)
-        fmt.println(player.pos.y, player.speed.y, player.g)
 
         rl.BeginDrawing()
         rl.ClearBackground(rl.BLACK)
 
         player_render(player)
         rl.DrawRectangleRec({0.0, Height - 100.0 + player.size, Width, 100.0}, rl.WHITE)
-        rl.DrawRectangleRec({200.0, Height - 100.0 + player.size, 200 + jump_dist, 100.0}, rl.RED)
-        rl.DrawRectangleRec({200.0, Height - 100.0 + player.size - jump_height, 250.0, jump_height}, rl.RED)
+        //rl.DrawRectangleRec({200.0, Height - 100.0 + player.size, 200 + jump_dist, 100.0}, rl.RED)
+        //rl.DrawRectangleRec({200.0, Height - 100.0 + player.size - jump_height, 250.0, jump_height}, rl.RED)
 
         rl.EndDrawing()
     }

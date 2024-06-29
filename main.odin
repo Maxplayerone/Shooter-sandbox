@@ -33,7 +33,7 @@ main :: proc(){
 
     rect := get_rect(player.pos, player.size)
 
-    player_mo := move_outline_create()
+    player_mo := move_outline_create(true)
 
     for !rl.WindowShouldClose(){
 

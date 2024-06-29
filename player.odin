@@ -37,6 +37,7 @@ player_update :: proc(p: ^Player, mo: ^MoveOutline){
         p.on_floor = false
         p.speed.y = p.start_vert_speed
         p.g = p.gravity_jumping
+
     }
 
     if !p.on_floor{
@@ -50,7 +51,6 @@ player_update :: proc(p: ^Player, mo: ^MoveOutline){
             p.g = p.gravity_landing
         }
 
-        fmt.println("hi")
         move_outline_record(mo, get_center(p.pos, p.size))
     }
 
@@ -58,7 +58,6 @@ player_update :: proc(p: ^Player, mo: ^MoveOutline){
         p.pos.y = Height - 100.0
         p.on_floor = true
 
-        fmt.println("bye")
         move_outline_record_breakpoint(mo)
     }
 

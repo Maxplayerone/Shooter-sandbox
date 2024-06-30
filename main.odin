@@ -19,7 +19,8 @@ main :: proc(){
 
     player := Player{}
     player.size = 40.0
-    player.pos = rl.Vector2{Width / 2 - player.size / 2, Height / 2 - player.size / 2 + 100.0}
+    //player.pos = rl.Vector2{Width / 2 - player.size / 2, Height / 2 - player.size / 2 + 100.0}
+    player.pos = rl.Vector2{250.0, 200.0}
     player.color = rl.Color{125, 255, 207, 255}
     player.speed.x = 400.0
 
@@ -40,6 +41,7 @@ main :: proc(){
     blocks: [dynamic]rl.Rectangle
     append(&blocks, rl.Rectangle{0.0, Height - 100.0 + player.size, Width, 100.0})
     append(&blocks, rl.Rectangle{200.0, 400.0, 100.0, 300.0})
+    append(&blocks, rl.Rectangle{700.0, 300.0, 150.0, 50.0})
 
     for !rl.WindowShouldClose(){
 
@@ -63,6 +65,8 @@ main :: proc(){
         //rl.DrawRectangleRec({200.0, Height - 100.0 + player.size, 200 + jump_dist, 100.0}, rl.RED)
         //rl.DrawRectangleRec({200.0, Height - 100.0 + player.size - jump_height, 250.0, jump_height}, rl.RED)
         move_outline_render(player_mo)
+
+        fmt.println(len(player_mo.breakpoints), len(player_mo.buf))
 
         rl.EndDrawing()
     }

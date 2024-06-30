@@ -17,9 +17,9 @@ Player :: struct{
     gravity_landing: f32,
     gravity_jumping: f32,
 
-    on_floor: bool,
-
     deg: f32,
+
+    jump_time_before_check: int,
 }
 
 player_rect :: proc(p: Player) -> rl.Rectangle{
@@ -45,7 +45,40 @@ player_update :: proc(p: ^Player, mo: ^MoveOutline, bullets: ^[dynamic]Bullet, b
         }
     }
 
+    //testing for collission with the floor
+    if is_colliding, floor_y := floor_collission(blocks, {p.pos.x, p.pos.y + p.size + 1.0}, p.size); is_colliding && p.jump_time_before_check <= 0{
+        p.pos.y = floor_y - p.size
+        p.speed.y = 0 //we are treating every surface like it's elevated
+
+        move_outline_record_breakpoint(mo)
+    }
+    else{
+        p.pos.y -= 0.5 * p.g * dt * dt + p.speed.y * dt
+        p.speed.y += p.g * dt
+
+        if p.speed.y > 0{
+            p.g = p.gravity_jumping
+        }
+        else{
+            p.g = p.gravity_landing
+        }
+
+        move_outline_record(mo, get_center(p.pos, p.size))
+    }
+
+    if rl.IsKeyPressed(.SPACE){
+        p.speed.y = p.start_vert_speed
+        p.g = p.gravity_jumping
+
+        p.pos.y -= 0.5 * p.g * dt * dt + p.speed.y * dt
+        p.speed.y += p.g * dt
+
+        p.jump_time_before_check = 5
+    }
+
+    p.jump_time_before_check -= 1
     //vertical movement
+    /*
     if rl.IsKeyPressed(.SPACE) {//;&& p.on_floor{
         p.on_floor = false
         p.speed.y = p.start_vert_speed
@@ -94,6 +127,7 @@ player_update :: proc(p: ^Player, mo: ^MoveOutline, bullets: ^[dynamic]Bullet, b
 
         move_outline_record(mo, get_center(p.pos, p.size))
     }
+        */
 
     //getting the angle between player and mouse
     mouse_pos := rl.GetMousePosition()

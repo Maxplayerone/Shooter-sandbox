@@ -25,7 +25,9 @@ move_outline_record :: proc(mo: ^MoveOutline, pos: rl.Vector2){
 }
 
 move_outline_record_breakpoint :: proc(mo: ^MoveOutline){
-    append(&mo.breakpoints, len(mo.buf) - 1)
+    if len(mo.breakpoints) == 0 || mo.breakpoints[len(mo.breakpoints) - 1] != len(mo.buf) - 1{
+        append(&mo.breakpoints, len(mo.buf) - 1)
+    }
 }
 
 move_outline_render_breakpoints :: proc(mo: MoveOutline){

@@ -32,11 +32,11 @@ wall_collission :: proc(walls: [dynamic]rl.Rectangle, vec: rl.Vector2) -> bool{
     return is_colliding
 }
 
-floor_collission :: proc(floors: [dynamic]rl.Rectangle, vec: rl.Vector2, floor_depth:f32 = 20.0) -> (bool, f32){
+floor_collission :: proc(floors: [dynamic]rl.Rectangle, vec: rl.Vector2, size: f32, floor_depth:f32 = 30.0) -> (bool, f32){
     is_colliding: bool
     floor_y_pos: f32
     for floor in floors{
-        if vec_rect_collission(vec, {floor.x, floor.y, floor.width, floor_depth}){
+        if rl.CheckCollisionRecs({vec.x, vec.y + size + 1.0, size, 0.0}, floor){
             is_colliding = true
             floor_y_pos = floor.y
             break

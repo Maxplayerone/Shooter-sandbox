@@ -66,8 +66,6 @@ main :: proc(){
         //rl.DrawRectangleRec({200.0, Height - 100.0 + player.size - jump_height, 250.0, jump_height}, rl.RED)
         move_outline_render(player_mo)
 
-        fmt.println(len(player_mo.breakpoints), len(player_mo.buf))
-
         rl.EndDrawing()
     }
     delete(player_mo.buf)

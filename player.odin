@@ -45,6 +45,13 @@ player_update :: proc(p: ^Player, mo: ^MoveOutline, bullets: ^[dynamic]Bullet, b
         }
     }
 
+    new_y_pos := p.pos.y - 0.5 * p.g * dt * dt + p.speed.y * dt
+    if ceiling_collission(blocks, {p.pos.x, new_y_pos, p.size, 0.0}){
+        p.g = p.gravity_landing
+        p.speed.y = 0.0
+        p.pos.y = blocks[2].y + blocks[2].height
+    }
+
     //testing for collission with the floor
     if is_colliding, floor_y := floor_collission(blocks, {p.pos.x, p.pos.y + p.size + 1.0}, p.size); is_colliding && p.jump_time_before_check <= 0{
         p.pos.y = floor_y - p.size
@@ -77,57 +84,6 @@ player_update :: proc(p: ^Player, mo: ^MoveOutline, bullets: ^[dynamic]Bullet, b
     }
 
     p.jump_time_before_check -= 1
-    //vertical movement
-    /*
-    if rl.IsKeyPressed(.SPACE) {//;&& p.on_floor{
-        p.on_floor = false
-        p.speed.y = p.start_vert_speed
-        p.g = p.gravity_jumping
-    }
-
-    if !p.on_floor{
-        p.pos.y -= 0.5 * p.g * dt * dt + p.speed.y * dt
-        p.speed.y += p.g * dt
-
-        /*
-        if p.pos.y > Height - 100.0{
-            p.pos.y = Height - 100.0
-            p.on_floor = true
-
-            move_outline_record_breakpoint(mo)
-        }
-        */
-        if vec_rect_collission(p.pos, blocks[0]){
-            p.pos.y = blocks[0].y - p.size
-            p.on_floor = true
-
-            move_outline_record_breakpoint(mo)
-        }
-        if vec_rect_collission(p.pos, blocks[1]){
-            p.pos.y = blocks[1].y - p.size
-            p.on_floor = true
-
-            move_outline_record_breakpoint(mo)
-        }
-            /*
-        if is_colliding, floor_y := floor_collission(blocks, {p.pos.x + p.size, p.pos.y + p.size}); is_colliding{
-            p.pos.y = floor_y + p.size
-            p.on_floor = true
-
-            move_outline_record_breakpoint(mo)
-        }
-            */
-
-        if p.speed.y > 0{
-            p.g = p.gravity_jumping
-        }
-        else{
-            p.g = p.gravity_landing
-        }
-
-        move_outline_record(mo, get_center(p.pos, p.size))
-    }
-        */
 
     //getting the angle between player and mouse
     mouse_pos := rl.GetMousePosition()

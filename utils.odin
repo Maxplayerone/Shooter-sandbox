@@ -44,3 +44,14 @@ floor_collission :: proc(floors: [dynamic]rl.Rectangle, vec: rl.Vector2, size: f
     }
     return is_colliding, floor_y_pos
 }
+
+ceiling_collission :: proc(ceilings: [dynamic]rl.Rectangle, rect: rl.Rectangle) -> bool{
+    is_colliding: bool
+    for ceiling in ceilings{
+        if rl.CheckCollisionRecs(ceiling, rect){
+            is_colliding = true
+            break
+        }
+    }
+    return is_colliding
+}

@@ -46,10 +46,10 @@ player_update :: proc(p: ^Player, mo: ^MoveOutline, bullets: ^[dynamic]Bullet, b
     }
 
     new_y_pos := p.pos.y - 0.5 * p.g * dt * dt + p.speed.y * dt
-    if ceiling_collission(blocks, {p.pos.x, new_y_pos, p.size, 0.0}){
+    if is_colliding, new_y := ceiling_collission(blocks, {p.pos.x, new_y_pos, p.size, 0.0}); is_colliding{
         p.g = p.gravity_landing
         p.speed.y = 0.0
-        p.pos.y = blocks[2].y + blocks[2].height
+        p.pos.y = new_y 
     }
 
     //testing for collission with the floor

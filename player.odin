@@ -3,6 +3,7 @@ package main
 import rl "vendor:raylib"
 
 import "core:fmt"
+import "core:math"
 
 Player :: struct{
     color: rl.Color,
@@ -17,32 +18,72 @@ Player :: struct{
     gravity_jumping: f32,
 
     on_floor: bool,
+
+    deg: f32,
 }
 
 player_rect :: proc(p: Player) -> rl.Rectangle{
     return rl.Rectangle{p.pos.x, p.pos.y, p.size, p.size}
 }
 
-player_update :: proc(p: ^Player, mo: ^MoveOutline){
+player_update :: proc(p: ^Player, mo: ^MoveOutline, bullets: ^[dynamic]Bullet, blocks: [dynamic]rl.Rectangle){
     dt := rl.GetFrameTime()
 
+    //horizontal movement
     if rl.IsKeyDown(.D){
-        p.pos.x += p.speed.x * dt
+        new_pos := p.pos.x + p.speed.x * dt
+
+        if !wall_collission(blocks, {new_pos + p.size, p.pos.y}){
+            p.pos.x = new_pos
+        }
     }
     if rl.IsKeyDown(.A){
-        p.pos.x -= p.speed.x * dt
+        new_pos := p.pos.x - p.speed.x * dt
+
+        if !wall_collission(blocks, {new_pos, p.pos.y}){
+            p.pos.x = new_pos
+        }
     }
 
-    if rl.IsKeyPressed(.SPACE){
+    //vertical movement
+    if rl.IsKeyPressed(.SPACE) {//;&& p.on_floor{
         p.on_floor = false
         p.speed.y = p.start_vert_speed
         p.g = p.gravity_jumping
-
     }
 
     if !p.on_floor{
         p.pos.y -= 0.5 * p.g * dt * dt + p.speed.y * dt
         p.speed.y += p.g * dt
+
+        /*
+        if p.pos.y > Height - 100.0{
+            p.pos.y = Height - 100.0
+            p.on_floor = true
+
+            move_outline_record_breakpoint(mo)
+        }
+        */
+        if vec_rect_collission(p.pos, blocks[0]){
+            p.pos.y = blocks[0].y - p.size
+            p.on_floor = true
+
+            move_outline_record_breakpoint(mo)
+        }
+        if vec_rect_collission(p.pos, blocks[1]){
+            p.pos.y = blocks[1].y - p.size
+            p.on_floor = true
+
+            move_outline_record_breakpoint(mo)
+        }
+            /*
+        if is_colliding, floor_y := floor_collission(blocks, {p.pos.x + p.size, p.pos.y + p.size}); is_colliding{
+            p.pos.y = floor_y + p.size
+            p.on_floor = true
+
+            move_outline_record_breakpoint(mo)
+        }
+            */
 
         if p.speed.y > 0{
             p.g = p.gravity_jumping
@@ -54,15 +95,24 @@ player_update :: proc(p: ^Player, mo: ^MoveOutline){
         move_outline_record(mo, get_center(p.pos, p.size))
     }
 
-    if p.pos.y > Height - 100.0{
-        p.pos.y = Height - 100.0
-        p.on_floor = true
+    //getting the angle between player and mouse
+    mouse_pos := rl.GetMousePosition()
+    dx := mouse_pos.x - p.pos.x
+    dy := mouse_pos.y - p.pos.y
+    p.deg = math.atan2(dy, dx) * (180.0 / 3.14) - 90.0
 
-        move_outline_record_breakpoint(mo)
+    if rl.IsMouseButtonPressed(.LEFT){
+        bullet := Bullet{}
+        bullet.pos = get_center(p.pos, p.size)
+        bullet.radius = 8.0
+        bullet.color = rl.WHITE
+        bullet.dir = vec_norm(dx, dy)
+        bullet.speed = 1200.0
+        append(bullets, bullet)
     }
-
 }
 
 player_render :: proc(p: Player){
     rl.DrawRectangleRec(player_rect(p), p.color)
+    rl.DrawRectanglePro(rl.Rectangle{p.pos.x + p.size / 2, p.pos.y + p.size / 2, 5.0, 40.0}, {0.0, 0.0}, p.deg, rl.RED)
 }

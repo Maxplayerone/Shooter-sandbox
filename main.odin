@@ -33,18 +33,33 @@ main :: proc(){
 
     rect := get_rect(player.pos, player.size)
 
-    player_mo := move_outline_create(true)
+    player_mo := move_outline_create(true, rl.Color{player.color.r, player.color.g, player.color.b, 200})
+
+    bullets: [dynamic]Bullet
+
+    blocks: [dynamic]rl.Rectangle
+    append(&blocks, rl.Rectangle{0.0, Height - 100.0 + player.size, Width, 100.0})
+    append(&blocks, rl.Rectangle{200.0, 400.0, 100.0, 300.0})
 
     for !rl.WindowShouldClose(){
 
-        player_update(&player, &player_mo)
+        player_update(&player, &player_mo, &bullets, blocks)
+
+        for i in 0..<len(bullets){
+            bullet_update(&bullets[i])
+        }
 
         rl.BeginDrawing()
         rl.ClearBackground(rl.BLACK)
 
 
         player_render(player)
-        rl.DrawRectangleRec({0.0, Height - 100.0 + player.size, Width, 100.0}, rl.WHITE)
+        for bullet in bullets{
+            bullet_render(bullet)
+        }
+        for block in blocks{
+            rl.DrawRectangleRec(block, rl.WHITE)
+        }
         //rl.DrawRectangleRec({200.0, Height - 100.0 + player.size, 200 + jump_dist, 100.0}, rl.RED)
         //rl.DrawRectangleRec({200.0, Height - 100.0 + player.size - jump_height, 250.0, jump_height}, rl.RED)
         move_outline_render(player_mo)
@@ -53,6 +68,8 @@ main :: proc(){
     }
     delete(player_mo.buf)
     delete(player_mo.breakpoints)
+    delete(bullets)
+    delete(blocks)
 
     rl.CloseWindow()
 

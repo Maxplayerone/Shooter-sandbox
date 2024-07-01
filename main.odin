@@ -114,15 +114,17 @@ main :: proc(){
             rl.DrawRectangleRec({Width - 200.0, Height - 200.0, 50.0, 50.0}, rect_color)
         }
 
-        if button(&gui_state, rl.Rectangle{100.0, 100.0, 200.0, 50.0}, "show rect"){
-            draw_rect = !draw_rect
-        }
-        if button(&gui_state, rl.Rectangle{100.0, 200.0, 200.0, 50.0}, "change color"){
+        window_rect := rl.Rectangle{50.0, 50.0, 300.0, 400.0}
+        window(window_rect, 40.0, "particle system")
+
+        if button(&gui_state, rel_to_window(window_rect, {0.1, 0.1}, {0.4, 0.1}), "change color"){
             rect_color.r = u8(rand.int31() % 255)
             rect_color.g = u8(rand.int31() % 255)
             rect_color.g = u8(rand.int31() % 255)
         }
-
+        if button(&gui_state, rel_to_window(window_rect, {0.1, 0.3}, {0.4, 0.1}), "show rect"){
+            draw_rect = !draw_rect
+        }
         move_outline_render(player_mo)
 
         rl.EndDrawing()

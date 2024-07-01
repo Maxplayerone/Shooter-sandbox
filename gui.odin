@@ -2,6 +2,9 @@ package main
 
 import rl "vendor:raylib"
 
+import "core:strings"
+import "core:fmt"
+
 uiid: int
 
 get_uiid :: proc() -> int{
@@ -18,7 +21,7 @@ GuiState :: struct{
     active_item: int,
 }
 
-button :: proc(g_state: ^GuiState, rect: rl.Rectangle) -> bool{
+button :: proc(g_state: ^GuiState, rect: rl.Rectangle, title := "") -> bool{
     clicked: bool 
 
     outline_width:f32 = 2.0
@@ -45,6 +48,13 @@ button :: proc(g_state: ^GuiState, rect: rl.Rectangle) -> bool{
     }
     else{
         rl.DrawRectangleRec(rect, button_color)
+    }
+
+    if title != ""{
+        text_padding: f32 = 8.0
+        if scale, ok := fit_text_in_line(title, 30, rect.width - 2.0 * text_padding); ok{
+            rl.DrawText(strings.clone_to_cstring(title, context.temp_allocator), i32(rect.x + text_padding), i32(rect.y + rect.height / 4), i32(scale), rl.WHITE)
+        }
     }
 
     return clicked

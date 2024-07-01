@@ -114,10 +114,10 @@ main :: proc(){
             rl.DrawRectangleRec({Width - 200.0, Height - 200.0, 50.0, 50.0}, rect_color)
         }
 
-        if button(&gui_state, rl.Rectangle{100.0, 100.0, 200.0, 50.0}){
+        if button(&gui_state, rl.Rectangle{100.0, 100.0, 200.0, 50.0}, "show rect"){
             draw_rect = !draw_rect
         }
-        if button(&gui_state, rl.Rectangle{100.0, 200.0, 200.0, 50.0}){
+        if button(&gui_state, rl.Rectangle{100.0, 200.0, 200.0, 50.0}, "change color"){
             rect_color.r = u8(rand.int31() % 255)
             rect_color.g = u8(rand.int31() % 255)
             rect_color.g = u8(rand.int31() % 255)
@@ -126,6 +126,8 @@ main :: proc(){
         move_outline_render(player_mo)
 
         rl.EndDrawing()
+
+        free_all(context.temp_allocator)
     }
     delete(player_mo.buf)
     delete(player_mo.breakpoints)

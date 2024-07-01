@@ -3,6 +3,7 @@ package main
 import rl "vendor:raylib"
 
 import "core:math"
+import "core:strings"
 
 get_rect :: proc(pos: rl.Vector2, size: f32) -> rl.Rectangle{
     return rl.Rectangle{pos.x, pos.y, size, size}
@@ -56,4 +57,19 @@ ceiling_collission :: proc(ceilings: [dynamic]rl.Rectangle, rect: rl.Rectangle) 
         }
     }
     return is_colliding, floor_y_with_size
+}
+
+fit_text_in_line :: proc(text: string, scale: int, width: f32, min_scale := 15) -> (int, bool){
+    text_cstring := strings.clone_to_cstring(text, context.temp_allocator)
+    if f32(rl.MeasureText(text_cstring, i32(min_scale))) > width{
+        return 0, false
+    }
+    scale := scale
+    for scale > min_scale{
+        if f32(rl.MeasureText(text_cstring, i32(scale))) < width{
+            break
+        }
+        scale -= 1
+    }
+    return scale, true
 }

@@ -22,6 +22,7 @@ GuiState :: struct{
     hot_item: int,
     active_item: int,
     is_window_clicked: bool,
+    resize_window: bool,
 }
 
 rel_to_window :: proc(window_rect: rl.Rectangle, pos_percentage: rl.Vector2, scale_percentage: rl.Vector2) -> rl.Rectangle{
@@ -56,6 +57,20 @@ window :: proc(g_state: ^GuiState, rect: rl.Rectangle, bar_height: f32, title :=
             g_state.active_item = uiid
             g_state.is_window_clicked = true
         }
+    }
+
+    resize_rect_size := f32(8.0)
+    resize_rect := rl.Rectangle{rect.x + rect.width - resize_rect_size, rect.y + rect.height - resize_rect_size, 2 * resize_rect_size, 2 * resize_rect_size}
+    if rl.CheckCollisionPointRec(rl.GetMousePosition(), resize_rect){
+        rl.SetMouseCursor(.RESIZE_NWSE)
+
+        if rl.IsMouseButtonDown(.LEFT){
+            g_state.resize_window = true  
+            g_state.is_window_clicked = false
+        }
+    }
+    else{
+        rl.SetMouseCursor(.ARROW)
     }
 
     //main window

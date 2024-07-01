@@ -126,11 +126,20 @@ main :: proc(){
             draw_rect = !draw_rect
         }
 
+
+        if gui_state.resize_window{
+            window_rect.width += rl.GetMouseDelta().x
+            window_rect.height += rl.GetMouseDelta().y
+            gui_state.resize_window = false
+            gui_state.is_window_clicked = false
+        }
+
         if gui_state.is_window_clicked{
             window_rect.x += rl.GetMouseDelta().x
             window_rect.y += rl.GetMouseDelta().y
             gui_state.is_window_clicked = false
         }
+
 
         move_outline_render(player_mo)
 

@@ -2,6 +2,7 @@ package main
 
 import "core:fmt"
 import "core:mem"
+import "core:math/rand"
 
 import rl "vendor:raylib"
 
@@ -43,9 +44,31 @@ main :: proc(){
     //append(&blocks, rl.Rectangle{200.0, 400.0, 100.0, 300.0})
     append(&blocks, rl.Rectangle{700.0, 300.0, 150.0, 50.0})
 
+    enemies: [dynamic]Enemy
+    {
+        enemy := Enemy{
+            pos = rl.Vector2{200.0, Height - 100.0},
+            size = 40.0,
+            color = rl.RED,
+        }
+        append(&enemies, enemy)
+    }
+    {
+        enemy := Enemy{
+            pos = rl.Vector2{300.0, Height - 100.0},
+            size = 40.0,
+            color = rl.RED,
+        }
+        append(&enemies, enemy)
+    }
+
+    gui_state := GuiState{}
+    draw_rect := true
+    rect_color := rl.GREEN
+
     for !rl.WindowShouldClose(){
 
-        player_update(&player, &player_mo, &bullets, blocks)
+        player_update(&player, &player_mo, &bullets, blocks, gui_state)
 
         for i in 0..<len(bullets){
             bullet_update(&bullets[i])
@@ -57,19 +80,49 @@ main :: proc(){
             }
         }
 
+        for i in 0..<len(enemies){
+            for j in 0..<len(bullets){
+                if rl.CheckCollisionCircleRec(bullets[j].pos, bullets[j].radius, get_rect(enemies[i].pos, enemies[i].size)){
+                    unordered_remove(&enemies, i)
+                    unordered_remove(&bullets, j)
+                    break
+                }
+            }
+        }
+
+        gui_state.hot_item = 0
+        gui_state.active_item = 0
+
         rl.BeginDrawing()
         rl.ClearBackground(rl.BLACK)
 
+        for enemy in enemies{
+            enemy_render(enemy)
+        }
 
         player_render(player)
+
         for bullet in bullets{
             bullet_render(bullet)
         }
+
         for block in blocks{
             rl.DrawRectangleRec(block, rl.WHITE)
         }
-        //rl.DrawRectangleRec({200.0, Height - 100.0 + player.size, 200 + jump_dist, 100.0}, rl.RED)
-        //rl.DrawRectangleRec({200.0, Height - 100.0 + player.size - jump_height, 250.0, jump_height}, rl.RED)
+
+        if draw_rect{
+            rl.DrawRectangleRec({Width - 200.0, Height - 200.0, 50.0, 50.0}, rect_color)
+        }
+
+        if button(&gui_state, rl.Rectangle{100.0, 100.0, 200.0, 50.0}){
+            draw_rect = !draw_rect
+        }
+        if button(&gui_state, rl.Rectangle{100.0, 200.0, 200.0, 50.0}){
+            rect_color.r = u8(rand.int31() % 255)
+            rect_color.g = u8(rand.int31() % 255)
+            rect_color.g = u8(rand.int31() % 255)
+        }
+
         move_outline_render(player_mo)
 
         rl.EndDrawing()
@@ -78,6 +131,7 @@ main :: proc(){
     delete(player_mo.breakpoints)
     delete(bullets)
     delete(blocks)
+    delete(enemies)
 
     rl.CloseWindow()
 

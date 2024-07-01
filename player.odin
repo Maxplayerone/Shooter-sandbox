@@ -26,7 +26,7 @@ player_rect :: proc(p: Player) -> rl.Rectangle{
     return rl.Rectangle{p.pos.x, p.pos.y, p.size, p.size}
 }
 
-player_update :: proc(p: ^Player, mo: ^MoveOutline, bullets: ^[dynamic]Bullet, blocks: [dynamic]rl.Rectangle){
+player_update :: proc(p: ^Player, mo: ^MoveOutline, bullets: ^[dynamic]Bullet, blocks: [dynamic]rl.Rectangle, gui_state: GuiState){
     dt := rl.GetFrameTime()
 
     //horizontal movement
@@ -91,7 +91,7 @@ player_update :: proc(p: ^Player, mo: ^MoveOutline, bullets: ^[dynamic]Bullet, b
     dy := mouse_pos.y - p.pos.y
     p.deg = math.atan2(dy, dx) * (180.0 / 3.14) - 90.0
 
-    if rl.IsMouseButtonPressed(.LEFT){
+    if rl.IsMouseButtonPressed(.LEFT) && gui_state.hot_item == 0{
         bullet := Bullet{}
         bullet.pos = get_center(p.pos, p.size)
         bullet.radius = 8.0

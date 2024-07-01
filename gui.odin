@@ -21,6 +21,7 @@ window_color :: rl.Color{45, 45, 45, 255}
 GuiState :: struct{
     hot_item: int,
     active_item: int,
+    is_window_clicked: bool,
 }
 
 rel_to_window :: proc(window_rect: rl.Rectangle, pos_percentage: rl.Vector2, scale_percentage: rl.Vector2) -> rl.Rectangle{
@@ -32,7 +33,7 @@ rel_to_window :: proc(window_rect: rl.Rectangle, pos_percentage: rl.Vector2, sca
     return rect
 }
 
-window :: proc(rect: rl.Rectangle, bar_height: f32, title := "my window"){
+window :: proc(g_state: ^GuiState, rect: rl.Rectangle, bar_height: f32, title := "my window"){
     //outline
     outline_width:f32 = 2.0
     rl.DrawRectangleRec({rect.x - outline_width, rect.y - outline_width - bar_height, rect.width + 2.0 * outline_width, (rect.height + bar_height) + 2.0 * outline_width}, rl.WHITE)
@@ -44,6 +45,17 @@ window :: proc(rect: rl.Rectangle, bar_height: f32, title := "my window"){
     if scale, ok := fit_text_in_line(title, 25, rect.width / 2 - text_padding); ok{
         rl.DrawText(strings.clone_to_cstring(title, context.temp_allocator), i32(bar_rect.x + text_padding), i32(bar_rect.y + bar_rect.height / 4), i32(scale), rl.WHITE)
         
+    }
+
+    uiid := get_uiid()
+    full_rect := rl.Rectangle{rect.x, rect.y - bar_height, rect.width, rect.height + bar_height}
+
+    if rl.CheckCollisionPointRec(rl.GetMousePosition(), full_rect){
+        g_state.hot_item = uiid
+        if rl.IsMouseButtonDown(.LEFT){
+            g_state.active_item = uiid
+            g_state.is_window_clicked = true
+        }
     }
 
     //main window
@@ -62,6 +74,10 @@ button :: proc(g_state: ^GuiState, rect: rl.Rectangle, title := "") -> bool{
 
     if rl.CheckCollisionPointRec(rl.GetMousePosition(), rect){
         g_state.hot_item = uiid 
+
+        if rl.IsMouseButtonDown(.LEFT){
+            g_state.is_window_clicked = false 
+        }
 
         if rl.IsMouseButtonPressed(.LEFT){
             g_state.active_item = uiid 

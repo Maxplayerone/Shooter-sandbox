@@ -21,7 +21,7 @@ main :: proc(){
     player := Player{}
     player.size = 40.0
     //player.pos = rl.Vector2{Width / 2 - player.size / 2, Height / 2 - player.size / 2 + 100.0}
-    player.pos = rl.Vector2{250.0, 200.0}
+    player.pos = rl.Vector2{750.0, 260.0}
     player.color = rl.Color{125, 255, 207, 255}
     player.speed.x = 400.0
 
@@ -66,6 +66,7 @@ main :: proc(){
     draw_rect := true
     rect_color := rl.GREEN
 
+    window_rect := rl.Rectangle{50.0, 50.0, 300.0, 400.0}
     for !rl.WindowShouldClose(){
 
         player_update(&player, &player_mo, &bullets, blocks, gui_state)
@@ -114,8 +115,7 @@ main :: proc(){
             rl.DrawRectangleRec({Width - 200.0, Height - 200.0, 50.0, 50.0}, rect_color)
         }
 
-        window_rect := rl.Rectangle{50.0, 50.0, 300.0, 400.0}
-        window(window_rect, 40.0, "particle system")
+        window(&gui_state, window_rect, 40.0, "particle system")
 
         if button(&gui_state, rel_to_window(window_rect, {0.1, 0.1}, {0.4, 0.1}), "change color"){
             rect_color.r = u8(rand.int31() % 255)
@@ -125,6 +125,13 @@ main :: proc(){
         if button(&gui_state, rel_to_window(window_rect, {0.1, 0.3}, {0.4, 0.1}), "show rect"){
             draw_rect = !draw_rect
         }
+
+        if gui_state.is_window_clicked{
+            window_rect.x += rl.GetMouseDelta().x
+            window_rect.y += rl.GetMouseDelta().y
+            gui_state.is_window_clicked = false
+        }
+
         move_outline_render(player_mo)
 
         rl.EndDrawing()

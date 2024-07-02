@@ -146,7 +146,7 @@ main :: proc(){
                 draw_rect = !draw_rect
             }
 
-            scroll_bar(&gui_state, rel_to_window(window_rect, {0.1, 0.5}, {0.4, 0.1}), value = &rect_size, max = rect_size_max, min = 10.0)
+            scroll_bar(&gui_state, rel_to_window(window_rect, {0.1, 0.5}, {0.4, 0.1}), number_rect = rel_to_window(window_rect, {0.55, 0.5}, {0.2, 0.15}), value = &rect_size, max = rect_size_max, min = 10.0)
 
             if gui_state.resize_window{
                 window_rect.width += rl.GetMouseDelta().x

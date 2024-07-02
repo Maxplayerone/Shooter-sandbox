@@ -4,6 +4,7 @@ import rl "vendor:raylib"
 
 import "core:strings"
 import "core:fmt"
+import "core:strconv"
 
 uiid: int
 
@@ -34,6 +35,10 @@ rel_to_window :: proc(window_rect: rl.Rectangle, pos_percentage: rl.Vector2, sca
     rect.width = window_rect.width * scale_percentage.x
     rect.height = window_rect.height * scale_percentage.y
     return rect
+}
+
+get_outline_rect :: proc(rect: rl.Rectangle, outline: f32) -> rl.Rectangle{
+    return rl.Rectangle{rect.x - outline, rect.y - outline, rect.width + 2 * outline, rect.height + 2 * outline}
 }
 
 window :: proc(g_state: ^GuiState, rect: rl.Rectangle, bar_height: f32, title := "my window"){
@@ -127,7 +132,7 @@ button :: proc(g_state: ^GuiState, rect: rl.Rectangle, title := "") -> bool{
 }
 
 
-scroll_bar :: proc(g_state: ^GuiState, rect: rl.Rectangle, value: ^f32, min:f32 = 0.0, max: f32, fill_color := rl.WHITE){
+scroll_bar :: proc(g_state: ^GuiState, rect: rl.Rectangle, number_rect: rl.Rectangle, value: ^f32, min:f32 = 0.0, max: f32, fill_color := rl.WHITE){
     outline_width:f32 = 2.0
     rl.DrawRectangleRec({rect.x - outline_width, rect.y - outline_width, rect.width + 2.0 * outline_width, rect.height + 2.0 * outline_width}, rl.WHITE)
 
@@ -162,4 +167,15 @@ scroll_bar :: proc(g_state: ^GuiState, rect: rl.Rectangle, value: ^f32, min:f32 
     }
 
     rl.DrawRectangleRec(fill_rect, fill_color)
+
+    number_outline_rect := get_outline_rect(number_rect, outline_width)
+    rl.DrawRectangleRec(number_outline_rect, rl.WHITE)
+    rl.DrawRectangleRec(number_rect, scroll_bar_bg_color)
+
+    buf: [8]byte
+    text_padding := f32(5.0)
+    str := strconv.ftoa(buf[:], f64(value^), 'f', 2, 32)
+    if scale, ok := fit_text_in_line(str, 30.0, number_rect.width - 2 * text_padding, min_scale = 5); ok{
+        rl.DrawText(strings.clone_to_cstring(str, context.temp_allocator), i32(number_rect.x + text_padding), i32(number_rect.y + number_rect.height / 4), i32(scale), rl.WHITE)
+    }
 }

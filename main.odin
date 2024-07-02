@@ -67,6 +67,8 @@ main :: proc(){
     rect_color := rl.GREEN
 
     window_rect := rl.Rectangle{50.0, 50.0, 300.0, 400.0}
+
+    show_gui := true
     for !rl.WindowShouldClose(){
 
         player_update(&player, &player_mo, &bullets, blocks, gui_state)
@@ -94,6 +96,19 @@ main :: proc(){
         gui_state.hot_item = 0
         gui_state.active_item = 0
 
+        //debug------------------------------------------------------
+        if rl.IsKeyPressed(.I){
+            show_gui = !show_gui
+        }
+        if rl.IsKeyPressed(.O){
+            player_mo.only_draw_last_segment = !player_mo.only_draw_last_segment
+        }
+        if rl.IsKeyPressed(.P){
+            clear(&player_mo.breakpoints)
+            clear(&player_mo.buf)
+        }
+        //-----------------------------------------------------------
+
         rl.BeginDrawing()
         rl.ClearBackground(rl.BLACK)
 
@@ -115,31 +130,32 @@ main :: proc(){
             rl.DrawRectangleRec({Width - 200.0, Height - 200.0, 50.0, 50.0}, rect_color)
         }
 
-        window(&gui_state, window_rect, 40.0, "particle system")
+        if show_gui{
+            window(&gui_state, window_rect, 40.0, "particle system")
 
-        if button(&gui_state, rel_to_window(window_rect, {0.1, 0.1}, {0.4, 0.1}), "change color"){
-            rect_color.r = u8(rand.int31() % 255)
-            rect_color.g = u8(rand.int31() % 255)
-            rect_color.g = u8(rand.int31() % 255)
+            if button(&gui_state, rel_to_window(window_rect, {0.1, 0.1}, {0.4, 0.1}), "change color"){ rect_color.r = u8(rand.int31() % 255)
+                rect_color.g = u8(rand.int31() % 255)
+                rect_color.g = u8(rand.int31() % 255)
+            }
+            if button(&gui_state, rel_to_window(window_rect, {0.1, 0.3}, {0.4, 0.1}), "show rect"){
+                draw_rect = !draw_rect
+            }
+
+            scroll_bar(rel_to_window(window_rect, {0.1, 0.5}, {0.4, 0.1}), max = 4.0)
+
+            if gui_state.resize_window{
+                window_rect.width += rl.GetMouseDelta().x
+                window_rect.height += rl.GetMouseDelta().y
+                gui_state.resize_window = false
+                gui_state.is_window_clicked = false
+            }
+
+            if gui_state.is_window_clicked{
+                window_rect.x += rl.GetMouseDelta().x
+                window_rect.y += rl.GetMouseDelta().y
+                gui_state.is_window_clicked = false
+            }
         }
-        if button(&gui_state, rel_to_window(window_rect, {0.1, 0.3}, {0.4, 0.1}), "show rect"){
-            draw_rect = !draw_rect
-        }
-
-
-        if gui_state.resize_window{
-            window_rect.width += rl.GetMouseDelta().x
-            window_rect.height += rl.GetMouseDelta().y
-            gui_state.resize_window = false
-            gui_state.is_window_clicked = false
-        }
-
-        if gui_state.is_window_clicked{
-            window_rect.x += rl.GetMouseDelta().x
-            window_rect.y += rl.GetMouseDelta().y
-            gui_state.is_window_clicked = false
-        }
-
 
         move_outline_render(player_mo)
 

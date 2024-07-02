@@ -18,6 +18,8 @@ button_active_color :: rl.Color{30, 30, 30, 255}
 
 window_color :: rl.Color{45, 45, 45, 255}
 
+scroll_bar_bg_color :: rl.Color{80, 80, 80, 255}
+
 GuiState :: struct{
     hot_item: int,
     active_item: int,
@@ -120,4 +122,11 @@ button :: proc(g_state: ^GuiState, rect: rl.Rectangle, title := "") -> bool{
     }
 
     return clicked
+}
+
+scroll_bar :: proc(rect: rl.Rectangle, min := 0.0, max: f32){
+    outline_width:f32 = 2.0
+    rl.DrawRectangleRec({rect.x - outline_width, rect.y - outline_width, rect.width + 2.0 * outline_width, rect.height + 2.0 * outline_width}, rl.WHITE)
+
+    rl.DrawRectangleRec(rect, scroll_bar_bg_color)
 }

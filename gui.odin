@@ -81,6 +81,8 @@ window :: proc(g_state: ^GuiState, rect: rl.Rectangle, bar_height: f32, title :=
     //outline between bar and main window
     rl.DrawLineEx({rect.x, rect.y}, {rect.x + rect.width, rect.y}, 2.0, rl.WHITE)
 }
+
+
 button :: proc(g_state: ^GuiState, rect: rl.Rectangle, title := "") -> bool{
     clicked: bool 
 
@@ -124,9 +126,40 @@ button :: proc(g_state: ^GuiState, rect: rl.Rectangle, title := "") -> bool{
     return clicked
 }
 
-scroll_bar :: proc(rect: rl.Rectangle, min := 0.0, max: f32){
+
+scroll_bar :: proc(g_state: ^GuiState, rect: rl.Rectangle, value: ^f32, min:f32 = 0.0, max: f32, fill_color := rl.WHITE){
     outline_width:f32 = 2.0
     rl.DrawRectangleRec({rect.x - outline_width, rect.y - outline_width, rect.width + 2.0 * outline_width, rect.height + 2.0 * outline_width}, rl.WHITE)
 
     rl.DrawRectangleRec(rect, scroll_bar_bg_color)
+
+    fill_padding := f32(2.0)
+    fill_rect := rl.Rectangle{rect.x + fill_padding, rect.y + fill_padding, rect.width - 2 * fill_padding, rect.height - 2 *fill_padding}
+
+
+    uiid := get_uiid()
+
+    if rl.CheckCollisionPointRec(rl.GetMousePosition(), rect){
+        g_state.hot_item = uiid 
+
+        if rl.IsMouseButtonDown(.LEFT){
+            g_state.is_window_clicked = false 
+            g_state.active_item = uiid
+        }
+
+    }
+
+    max_width := fill_rect.width
+    fill_rect.width *= (value^)/max
+
+    if g_state.active_item == uiid{
+        fill_rect.width = rl.GetMousePosition().x - fill_rect.x
+    }
+    value^ = max * fill_rect.width / max_width
+
+    if value^ < min{
+        value^ = min
+    }
+
+    rl.DrawRectangleRec(fill_rect, fill_color)
 }

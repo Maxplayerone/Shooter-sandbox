@@ -69,6 +69,10 @@ main :: proc(){
     window_rect := rl.Rectangle{50.0, 50.0, 300.0, 400.0}
 
     show_gui := true
+
+    rect_size := f32(50.0)
+    rect_size_max := rect_size * 2
+
     for !rl.WindowShouldClose(){
 
         player_update(&player, &player_mo, &bullets, blocks, gui_state)
@@ -95,6 +99,7 @@ main :: proc(){
 
         gui_state.hot_item = 0
         gui_state.active_item = 0
+        uiid = 0
 
         //debug------------------------------------------------------
         if rl.IsKeyPressed(.I){
@@ -127,7 +132,7 @@ main :: proc(){
         }
 
         if draw_rect{
-            rl.DrawRectangleRec({Width - 200.0, Height - 200.0, 50.0, 50.0}, rect_color)
+            rl.DrawRectangleRec({Width - 200.0, Height - 200.0, rect_size, rect_size}, rect_color)
         }
 
         if show_gui{
@@ -141,7 +146,7 @@ main :: proc(){
                 draw_rect = !draw_rect
             }
 
-            scroll_bar(rel_to_window(window_rect, {0.1, 0.5}, {0.4, 0.1}), max = 4.0)
+            scroll_bar(&gui_state, rel_to_window(window_rect, {0.1, 0.5}, {0.4, 0.1}), value = &rect_size, max = rect_size_max, min = 10.0)
 
             if gui_state.resize_window{
                 window_rect.width += rl.GetMouseDelta().x

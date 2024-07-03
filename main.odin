@@ -68,12 +68,13 @@ main :: proc(){
 
     window_rect := rl.Rectangle{50.0, 50.0, 300.0, 400.0}
 
-    show_gui := true
-
-    rect_size := f32(50.0)
-    rect_size_max := rect_size * 2
+    show_gui := true 
 
     command: [dynamic]rl.KeyboardKey
+
+
+    particles: [dynamic]Particle
+    StartingPos := rl.Vector2{480.0, 590.0}
 
     for !rl.WindowShouldClose(){
 
@@ -97,6 +98,10 @@ main :: proc(){
                     break
                 }
             }
+        }
+
+        for i in 0..<len(particles){
+            particle_update(&particles[i])
         }
 
         gui_state.hot_item = 0
@@ -133,23 +138,34 @@ main :: proc(){
             rl.DrawRectangleRec(block, rl.WHITE)
         }
 
-        if draw_rect{
-            rl.DrawRectangleRec({Width - 200.0, Height - 200.0, rect_size, rect_size}, rect_color)
+        for particle in particles{
+            particle_render(particle)
         }
 
         if show_gui{
             window(&gui_state, window_rect, 40.0, "particle system")
 
-            if button(&gui_state, rel_to_window(window_rect, {0.1, 0.1}, {0.4, 0.1}), "change color"){ rect_color.r = u8(rand.int31() % 255)
-                rect_color.g = u8(rand.int31() % 255)
-                rect_color.g = u8(rand.int31() % 255)
+            if button(&gui_state, rel_to_window(window_rect, {0.1, 0.07}, {0.3, 0.08}), "reset"){
+                for i in 0..<len(particles){
+                    particles[i].pos = StartingPos
+                    particles[i].lifetime = 20.0
+                }
             }
-            if button(&gui_state, rel_to_window(window_rect, {0.1, 0.3}, {0.4, 0.1}), "show rect"){
-                draw_rect = !draw_rect
+            if button(&gui_state, rel_to_window(window_rect, {0.1, 0.2}, {0.4, 0.1}), "spawn particle"){
+                rand_angle := f32(rand.int31() % 360)
+                p := Particle{
+                    pos = StartingPos,
+                    vel = rl.Vector2Rotate({1.0, 0.0}, rand_angle),
+                    speed = 200.0,
+                    lifetime = 20.0,
+                    color = rl.RED,
+                }
+                append(&particles, p)
             }
 
-            scroll_bar(&gui_state, rel_to_window(window_rect, {0.1, 0.5}, {0.4, 0.1}), value = &rect_size, max = rect_size_max, min = 10.0)
-            display(&gui_state, &command, rel_to_window(window_rect, {0.55, 0.5}, {0.2, 0.15}), &rect_size)
+            //text(rel_to_window(window_rect, {0.1, 0.18}, {0.3, 0.08}), "min velocity")
+            //scroll_bar(&gui_state, rel_to_window(window_rect, {0.1, 0.25}, {0.3, 0.08}), &angle, max = 90.0)
+            //display_active(&gui_state, &command, rel_to_window(window_rect, {0.5, 0.25}, {0.2, 0.05}), &angle)
 
             if gui_state.resize_window{
                 window_rect.width += rl.GetMouseDelta().x
@@ -177,6 +193,7 @@ main :: proc(){
     delete(blocks)
     delete(enemies)
     delete(command)
+    delete(particles)
 
     rl.CloseWindow()
 

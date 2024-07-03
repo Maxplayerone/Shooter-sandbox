@@ -174,7 +174,7 @@ scroll_bar :: proc(g_state: ^GuiState, rect: rl.Rectangle, value: ^f32, min:f32 
 
 }
 
-display :: proc(g_state: ^GuiState, command:  ^[dynamic]rl.KeyboardKey, rect: rl.Rectangle, value: ^f32){
+display_active :: proc(g_state: ^GuiState, command:  ^[dynamic]rl.KeyboardKey, rect: rl.Rectangle, value: ^f32){
     outline_width := f32(2.0)
     outline_rect := get_outline_rect(rect, outline_width)
     rl.DrawRectangleRec(outline_rect, rl.WHITE)
@@ -224,4 +224,31 @@ display :: proc(g_state: ^GuiState, command:  ^[dynamic]rl.KeyboardKey, rect: rl
         rl.DrawText(strings.clone_to_cstring(str, context.temp_allocator), i32(rect.x + text_padding), i32(rect.y + rect.height / 4), i32(scale), rl.WHITE)
     }
 
+}
+
+display :: proc(rect: rl.Rectangle, value: ^f32){
+    outline_width := f32(2.0)
+    outline_rect := get_outline_rect(rect, outline_width)
+    rl.DrawRectangleRec(outline_rect, rl.WHITE)
+    rl.DrawRectangleRec(rect, scroll_bar_bg_color)
+
+    buf: [8]byte
+    text_padding := f32(5.0)
+    str := strconv.ftoa(buf[:], f64(value^), 'f', 2, 32)
+
+    if scale, ok := fit_text_in_line(str, 30.0, rect.width - 2 * text_padding, min_scale = 5); ok{
+        rl.DrawText(strings.clone_to_cstring(str, context.temp_allocator), i32(rect.x + text_padding), i32(rect.y + rect.height / 4), i32(scale), rl.WHITE)
+    }
+}
+
+text :: proc(rect: rl.Rectangle, title: string){
+    outline_width := f32(2.0)
+    outline_rect := get_outline_rect(rect, outline_width)
+    rl.DrawRectangleRec(outline_rect, rl.WHITE)
+    rl.DrawRectangleRec(rect, scroll_bar_bg_color)
+
+    text_padding := f32(5.0)
+    if scale, ok := fit_text_in_line(title, 30.0, rect.width - 2 * text_padding, min_scale = 5); ok{
+        rl.DrawText(strings.clone_to_cstring(title, context.temp_allocator), i32(rect.x + text_padding), i32(rect.y + rect.height / 4), i32(scale), rl.WHITE)
+    }
 }

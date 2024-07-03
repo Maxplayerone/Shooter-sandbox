@@ -18,6 +18,10 @@ vec_norm :: proc(x: f32, y: f32) -> rl.Vector2{
     return rl.Vector2{x / len, y / len}
 }
 
+to_rad :: proc(angle_deg: f32) -> f32{
+    return angle_deg * math.PI/180.0
+}
+
 vec_rect_collission :: proc(vec: rl.Vector2, rect: rl.Rectangle) -> bool{
     return vec.x > rect.x && vec.x < rect.x + rect.width && vec.y > rect.y && vec.y < rect.y + rect.height
 }

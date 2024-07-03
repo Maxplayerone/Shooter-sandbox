@@ -73,6 +73,8 @@ main :: proc(){
     rect_size := f32(50.0)
     rect_size_max := rect_size * 2
 
+    command: [dynamic]rl.KeyboardKey
+
     for !rl.WindowShouldClose(){
 
         player_update(&player, &player_mo, &bullets, blocks, gui_state)
@@ -147,7 +149,7 @@ main :: proc(){
             }
 
             scroll_bar(&gui_state, rel_to_window(window_rect, {0.1, 0.5}, {0.4, 0.1}), value = &rect_size, max = rect_size_max, min = 10.0)
-            display(&gui_state, rel_to_window(window_rect, {0.55, 0.5}, {0.2, 0.15}), &rect_size)
+            display(&gui_state, &command, rel_to_window(window_rect, {0.55, 0.5}, {0.2, 0.15}), &rect_size)
 
             if gui_state.resize_window{
                 window_rect.width += rl.GetMouseDelta().x
@@ -174,6 +176,7 @@ main :: proc(){
     delete(bullets)
     delete(blocks)
     delete(enemies)
+    delete(command)
 
     rl.CloseWindow()
 

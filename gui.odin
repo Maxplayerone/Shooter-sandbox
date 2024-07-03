@@ -26,6 +26,7 @@ GuiState :: struct{
     active_item: int,
     is_window_clicked: bool,
     resize_window: bool,
+    last_active_item: int,
 }
 
 rel_to_window :: proc(window_rect: rl.Rectangle, pos_percentage: rl.Vector2, scale_percentage: rl.Vector2) -> rl.Rectangle{
@@ -60,9 +61,11 @@ window :: proc(g_state: ^GuiState, rect: rl.Rectangle, bar_height: f32, title :=
 
     if rl.CheckCollisionPointRec(rl.GetMousePosition(), full_rect){
         g_state.hot_item = uiid
+
         if rl.IsMouseButtonDown(.LEFT){
             g_state.active_item = uiid
             g_state.is_window_clicked = true
+            g_state.last_active_item = uiid
         }
     }
 
@@ -106,6 +109,7 @@ button :: proc(g_state: ^GuiState, rect: rl.Rectangle, title := "") -> bool{
         if rl.IsMouseButtonPressed(.LEFT){
             g_state.active_item = uiid 
             clicked = true
+            g_state.last_active_item = uiid
         }
     }
 
@@ -141,7 +145,6 @@ scroll_bar :: proc(g_state: ^GuiState, rect: rl.Rectangle, value: ^f32, min:f32 
     fill_padding := f32(2.0)
     fill_rect := rl.Rectangle{rect.x + fill_padding, rect.y + fill_padding, rect.width - 2 * fill_padding, rect.height - 2 *fill_padding}
 
-
     uiid := get_uiid()
 
     if rl.CheckCollisionPointRec(rl.GetMousePosition(), rect){
@@ -150,6 +153,7 @@ scroll_bar :: proc(g_state: ^GuiState, rect: rl.Rectangle, value: ^f32, min:f32 
         if rl.IsMouseButtonDown(.LEFT){
             g_state.is_window_clicked = false 
             g_state.active_item = uiid
+            g_state.last_active_item = uiid
         }
 
     }
@@ -170,16 +174,54 @@ scroll_bar :: proc(g_state: ^GuiState, rect: rl.Rectangle, value: ^f32, min:f32 
 
 }
 
-display :: proc(g_state: ^GuiState, rect: rl.Rectangle, value: ^f32){
+display :: proc(g_state: ^GuiState, command:  ^[dynamic]rl.KeyboardKey, rect: rl.Rectangle, value: ^f32){
     outline_width := f32(2.0)
     outline_rect := get_outline_rect(rect, outline_width)
     rl.DrawRectangleRec(outline_rect, rl.WHITE)
     rl.DrawRectangleRec(rect, scroll_bar_bg_color)
 
+    uiid := get_uiid()
+
+    if rl.CheckCollisionPointRec(rl.GetMousePosition(), rect){
+        g_state.hot_item = uiid 
+
+        if rl.IsMouseButtonDown(.LEFT){
+            g_state.is_window_clicked = false 
+            g_state.last_active_item = uiid
+        }
+
+        if rl.IsMouseButtonPressed(.LEFT){
+            g_state.active_item = uiid
+        }
+    }
+
+    //getting the scroll bar value to string
     buf: [8]byte
     text_padding := f32(5.0)
     str := strconv.ftoa(buf[:], f64(value^), 'f', 2, 32)
+
+    //pulling user input and possibly changing the string
+    if key := rl.GetKeyPressed(); g_state.last_active_item == uiid && key != .KEY_NULL{
+        if key == .BACKSPACE{
+            if len(command) > 0{
+                pop(command)
+            }
+        }
+        else if key == .ENTER{
+            g_state.last_active_item = 0
+        }
+        else{
+            append(command, key)
+        }
+    }
+
+    if len(command) != 0 && g_state.last_active_item == uiid{
+        str = to_string_only_numbers(command^)
+        value^ = f32(strconv.atof(str))
+    }
+
     if scale, ok := fit_text_in_line(str, 30.0, rect.width - 2 * text_padding, min_scale = 5); ok{
         rl.DrawText(strings.clone_to_cstring(str, context.temp_allocator), i32(rect.x + text_padding), i32(rect.y + rect.height / 4), i32(scale), rl.WHITE)
     }
+
 }

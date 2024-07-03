@@ -73,3 +73,13 @@ fit_text_in_line :: proc(text: string, scale: int, width: f32, min_scale := 15) 
     }
     return scale, true
 }
+
+to_string_only_numbers :: proc(command: [dynamic]rl.KeyboardKey) -> string{
+    b := strings.builder_make(context.temp_allocator)
+    for c in command{
+        if int(c) > 47 && int(c) < 58 || int(c) == 46{
+            strings.write_rune(&b, rune(int(c)))
+        }
+    }
+    return strings.to_string(b)
+}

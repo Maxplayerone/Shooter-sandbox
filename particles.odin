@@ -8,6 +8,7 @@ Particle :: struct{
     pos: rl.Vector2,
     vel: rl.Vector2,
     speed: f32,
+    g: f32,
 
     color: rl.Color,
     lifetime: f32, //in seconds
@@ -18,7 +19,7 @@ particle_update :: proc(p: ^Particle){
     p.lifetime -= dt
 
     if p.lifetime > 0.0{
-        p.pos += p.vel * p.speed * dt
+        p.pos.x += p.vel.x * p.speed * dt
     }
 }
 

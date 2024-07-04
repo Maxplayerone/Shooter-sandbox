@@ -87,3 +87,11 @@ to_string_only_numbers :: proc(command: [dynamic]rl.KeyboardKey) -> string{
     }
     return strings.to_string(b)
 }
+
+get_gravity :: proc(dist: rl.Vector2, hor_speed: f32) -> f32{
+    return -2.0 * dist.y * (hor_speed * hor_speed) / (dist.x * dist.x)
+}
+
+get_ver_speed :: proc(dist: rl.Vector2, hor_speed: f32) -> f32{
+    return 2.0 * dist.y * hor_speed / dist.x
+}

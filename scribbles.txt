@@ -1,6 +1,5 @@
-What I want in the game
+to-do
 
--console to: add any weapon I want, change the properties of the weapons, change enemy summoning algorithm etc.
--particles (also those affected by gravity)
--different weapons (rifle, shotgun, granade launcher, brimstone-like thingy)
--different enemies
+-and gravity to particles
+-continue with the article
+-add delay between updating and rendering particles when we get to the emitter

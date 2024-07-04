@@ -75,6 +75,8 @@ main :: proc(){
 
     particles: [dynamic]Particle
     StartingPos := rl.Vector2{480.0, 590.0}
+    time_btw_spawns := f32(0.3)
+    start_time_btw_spawns := time_btw_spawns
 
     for !rl.WindowShouldClose(){
 
@@ -151,16 +153,35 @@ main :: proc(){
                     particles[i].lifetime = 20.0
                 }
             }
+
             if button(&gui_state, rel_to_window(window_rect, {0.1, 0.2}, {0.4, 0.1}), "spawn particle"){
-                rand_angle := f32(rand.int31() % 360)
+                rand_angle := f32(rand.int31() % 45)
+                sign: f32 = rand.int31()  % 2 == 0 ? 1.0 : -1.0
+                rand_angle *= sign
                 p := Particle{
                     pos = StartingPos,
-                    vel = rl.Vector2Rotate({1.0, 0.0}, rand_angle),
+                    vel = rl.Vector2Rotate({0.0, -1.0}, to_rad(rand_angle)),
                     speed = 200.0,
                     lifetime = 20.0,
                     color = rl.RED,
                 }
                 append(&particles, p)
+            }
+
+            if button(&gui_state, rel_to_window(window_rect, {0.1, 0.35}, {0.4, 0.1}), "spawn 10"){
+                for i in 0..<10{
+                    rand_angle := f32(rand.int31() % 45)
+                    sign: f32 = rand.int31() % 2 == 0 ? 1.0 : -1.0
+                    rand_angle *= sign
+                    p := Particle{
+                        pos = StartingPos,
+                        vel = rl.Vector2Rotate({0.0, -1.0}, to_rad(rand_angle)),
+                        speed = 200.0,
+                        lifetime = 20.0, 
+                        color = rl.RED,
+                    }
+                    append(&particles, p)
+                }
             }
 
             //text(rel_to_window(window_rect, {0.1, 0.18}, {0.3, 0.08}), "min velocity")

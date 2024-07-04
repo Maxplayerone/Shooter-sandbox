@@ -2,24 +2,36 @@ package main
 
 import rl "vendor:raylib"
 
+import "core:fmt"
+
 ParticleSize :: f32(10.0)
 
 Particle :: struct{
     pos: rl.Vector2,
     vel: rl.Vector2,
-    speed: f32,
     g: f32,
 
     color: rl.Color,
     lifetime: f32, //in seconds
 }
 
-particle_update :: proc(p: ^Particle){
+particle_update :: proc(p: ^Particle, blocks: [dynamic]rl.Rectangle){
     dt := rl.GetFrameTime()
     p.lifetime -= dt
 
     if p.lifetime > 0.0{
-        p.pos.x += p.vel.x * p.speed * dt
+
+        new_y_pos :=  p.pos.y - (0.5 * p.g * dt * dt + p.vel.y * dt)
+        if is_colliding, floor_y := floor_collission(blocks, new_y_pos, ParticleSize); !is_colliding{
+
+            p.pos.x += p.vel.x * dt
+
+            p.pos.y = new_y_pos
+            p.vel.y += p.g * dt
+        }
+        else{
+            p.pos.y = floor_y
+        }
     }
 }
 

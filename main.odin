@@ -103,7 +103,7 @@ main :: proc(){
         }
 
         for i in 0..<len(particles){
-            particle_update(&particles[i])
+            particle_update(&particles[i], blocks)
         }
 
         gui_state.hot_item = 0
@@ -155,32 +155,23 @@ main :: proc(){
             }
 
             if button(&gui_state, rel_to_window(window_rect, {0.1, 0.2}, {0.4, 0.1}), "spawn particle"){
-                rand_angle := f32(rand.int31() % 45)
-                sign: f32 = rand.int31()  % 2 == 0 ? 1.0 : -1.0
-                rand_angle *= sign
+                //dist := rl.Vector2{f32(rand.int31() % 50) + 20.0, f32(rand.int31() % 50) + 20.0}
+                dist := rl.Vector2{100.0, 100.0}
+                sign := rand.int31() % 2 == 0 ? 1 : -1
+
                 p := Particle{
                     pos = StartingPos,
-                    vel = rl.Vector2Rotate({0.0, -1.0}, to_rad(rand_angle)),
-                    speed = 200.0,
-                    lifetime = 20.0,
+                    vel = rl.Vector2{f32(sign) * 200.0, get_ver_speed(dist, 200.0)},
+                    lifetime = 2.0,
                     color = rl.RED,
+                    g = get_gravity(dist, 200.0),
                 }
                 append(&particles, p)
             }
 
             if button(&gui_state, rel_to_window(window_rect, {0.1, 0.35}, {0.4, 0.1}), "spawn 10"){
                 for i in 0..<10{
-                    rand_angle := f32(rand.int31() % 45)
-                    sign: f32 = rand.int31() % 2 == 0 ? 1.0 : -1.0
-                    rand_angle *= sign
-                    p := Particle{
-                        pos = StartingPos,
-                        vel = rl.Vector2Rotate({0.0, -1.0}, to_rad(rand_angle)),
-                        speed = 200.0,
-                        lifetime = 20.0, 
-                        color = rl.RED,
-                    }
-                    append(&particles, p)
+
                 }
             }
 

@@ -10,6 +10,7 @@ Particle :: struct{
     pos: rl.Vector2,
     vel: rl.Vector2,
     g: f32,
+    dist: rl.Vector2,
 
     color: rl.Color,
     lifetime: f32, //in seconds

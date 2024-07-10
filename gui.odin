@@ -91,10 +91,7 @@ gui_window :: proc(g_state: ^GuiState, rect: rl.Rectangle, title := "my window")
 
     //bar
     rl.DrawRectangleRec(bar_rect, WindowColor)
-    if scale, ok := fit_text_in_line(title, 25, rect.width / 2 - TextPadding); ok{
-        rl.DrawText(strings.clone_to_cstring(title, context.temp_allocator), i32(bar_rect.x + TextPadding), i32(bar_rect.y + bar_rect.height / 4), i32(scale), rl.WHITE)
-        
-    }
+    adjust_and_draw_text(title, rect, TextPadding, 25)
 
     uiid := get_uiid()
 
@@ -162,9 +159,7 @@ gui_button :: proc(g_state: ^GuiState, rect: rl.Rectangle, title := "") -> bool{
 
     //text
     if title != ""{
-        if scale, ok := fit_text_in_line(title, 30, button_rect.width - 2.0 * TextPadding); ok{
-            rl.DrawText(strings.clone_to_cstring(title, context.temp_allocator), i32(button_rect.x + TextPadding), i32(button_rect.y + button_rect.height / 4), i32(scale), rl.WHITE)
-        }
+        adjust_and_draw_text(title, button_rect, TextPadding, 30)
     }
 
     return clicked
@@ -193,19 +188,7 @@ gui_scroll_bar :: proc(g_state: ^GuiState, rect: rl.Rectangle, title := "", valu
     rl.DrawRectangleRec(title_bar_rect, scroll_bar_bg_color)
 
     if title != ""{
-        scalex, ok1 := fit_text_in_line(title, 30, title_bar_rect.width - 2 * TextPadding)
-        scaley, ok2 := fit_text_in_column(30, (title_bar_rect.height - 2 * TextPadding))
-        if scalex < scaley && ok1{
-            rl.DrawText(strings.clone_to_cstring(title, context.temp_allocator), i32(title_bar_rect.x + TextPadding), i32(title_bar_rect.y + title_bar_rect.height / 4), i32(scalex), rl.WHITE)
-        }
-        else if scaley < scalex && ok2{
-            rl.DrawText(strings.clone_to_cstring(title, context.temp_allocator), i32(title_bar_rect.x + TextPadding), i32(title_bar_rect.y + title_bar_rect.height / 4), i32(scaley), rl.WHITE)
-        }
-        /*
-        if scale, ok := fit_text_in_line(title, 30, title_bar_rect.width - 2.0 * TextPadding); ok{
-            rl.DrawText(strings.clone_to_cstring(title, context.temp_allocator), i32(title_bar_rect.x + TextPadding), i32(title_bar_rect.y + title_bar_rect.height / 4), i32(scale), rl.WHITE)
-        }
-            */
+        adjust_and_draw_text(title, title_bar_rect, TextPadding, 30)
     }
 
     //fill rect stuff
@@ -234,7 +217,12 @@ gui_scroll_bar :: proc(g_state: ^GuiState, rect: rl.Rectangle, title := "", valu
     rl.DrawRectangleRec(fill_rect, fill_color)
 
     //display stuff rect
-
+    buf: [8]byte
+    str := strconv.ftoa(buf[:], f64(value^), 'f', 2, 32)
+    if str[0] == '+'{
+        str = str[1:]
+    }
+    adjust_and_draw_text(str, display_rect, TextPadding, 30)
 }
 
 /*

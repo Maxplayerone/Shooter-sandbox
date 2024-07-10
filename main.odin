@@ -239,6 +239,8 @@ main :: proc(){
             }
         }
 
+        rl.DrawCircleV({Width / 2, Height / 2}, value, rl.ORANGE)
+
         move_outline_render(player_mo)
 
         rl.EndDrawing()

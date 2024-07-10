@@ -78,6 +78,23 @@ main :: proc(){
     time_btw_spawns := f32(0.3)
     start_time_btw_spawns := time_btw_spawns
 
+    config := ParticleConfig{}
+    config.pos = rl.Vector2{480.0, 590.0}
+    config.vel = rl.Vector2{400.0, 0.0}
+    config.color = rl.RED 
+    config.lifetime = 2.0
+    config.size = 10.0
+    config.shape = .Circle
+
+    g_config := GravityParticleConfig{}
+    g_config.base_dist = {100.0, 50.0}
+    g_config.dist_offset = {50.0, 10.0}
+    g_config.dist_offset_jump = 10.0
+    g_config.vel_offset = 50.0
+    g_config.vel_offset_jump = 5.0
+
+    enemy_death_effect := ParticleInstancer{}
+
     for !rl.WindowShouldClose(){
 
         player_update(&player, &player_mo, &bullets, blocks, gui_state)
@@ -102,9 +119,7 @@ main :: proc(){
             }
         }
 
-        for i in 0..<len(particles){
-            particle_update(&particles[i], blocks)
-        }
+        particle_inst_update(&enemy_death_effect, blocks)
 
         gui_state.hot_item = 0
         gui_state.active_item = 0
@@ -140,39 +155,30 @@ main :: proc(){
             rl.DrawRectangleRec(block, rl.WHITE)
         }
 
-        for particle in particles{
-            particle_render(particle)
-        }
+        particle_inst_render(enemy_death_effect)
 
         if show_gui{
             window(&gui_state, window_rect, 40.0, "particle system")
 
             if button(&gui_state, rel_to_window(window_rect, {0.1, 0.07}, {0.3, 0.08}), "reset"){
+                /*
                 for i in 0..<len(particles){
                     particles[i].pos = StartingPos
-                    particles[i].vel.y = get_ver_speed(particles[i].dist, particles[i].vel.x)
-                    particles[i].lifetime = 20.0
+                    if particles[i].is_gravity{
+                        particles[i].vel.y = get_ver_speed(particles[i].dist, particles[i].vel.x)
+                    }
+                    particles[i].lifetime = 2.0
                 }
+                    */
             }
 
             if button(&gui_state, rel_to_window(window_rect, {0.1, 0.2}, {0.4, 0.1}), "spawn particle"){
-                dist := rl.Vector2{(f32(rand.int31() % 10) + 20.0) * 5.0, (f32(rand.int31() % 10) + 20.0) * 5.0}
-                sign := rand.int31() % 2 == 0 ? 1 : -1
-
-                p := Particle{
-                    pos = StartingPos,
-                    vel = rl.Vector2{f32(sign) * 200.0, get_ver_speed(dist,  200.0)},
-                    lifetime = 2.0,
-                    color = rl.RED,
-                    g = get_gravity(dist, 200.0),
-                    dist = dist,
-                }
-                append(&particles, p)
+                append(&enemy_death_effect.buf, spawn_particle_gravity(g_config, config))
             }
 
             if button(&gui_state, rel_to_window(window_rect, {0.1, 0.35}, {0.4, 0.1}), "spawn 10"){
                 for i in 0..<10{
-
+                    append(&enemy_death_effect.buf, spawn_particle_gravity(g_config, config))
                 }
             }
 
@@ -207,6 +213,7 @@ main :: proc(){
     delete(enemies)
     delete(command)
     delete(particles)
+    delete(enemy_death_effect.buf)
 
     rl.CloseWindow()
 

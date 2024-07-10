@@ -24,6 +24,7 @@ scroll_bar_bg_color :: rl.Color{80, 80, 80, 255}
 GuiState :: struct{
     hot_item: int,
     active_item: int,
+    
     is_window_clicked: bool,
     resize_window: bool,
     last_active_item: int,

@@ -62,10 +62,10 @@ main :: proc(){
         append(&enemies, enemy)
     }
 
-    window_rect := rl.Rectangle{50.0, 10.0, 300.0, 400.0}
+    window_rect := rl.Rectangle{11, 10, 427, 621}
     gui_state := GuiState{}
 
-    gui_rects := generate_rects_for_window(window_rect, 4)
+    gui_rects := generate_rects_for_window(window_rect, 7)
 
     show_gui := true 
 
@@ -77,16 +77,16 @@ main :: proc(){
     start_time_btw_spawns := time_btw_spawns
 
     config := ParticleConfig{}
-    config.pos = rl.Vector2{480.0, 590.0}
-    config.vel = rl.Vector2{400.0, 0.0}
+    config.pos = rl.Vector2{700.0, 590.0}
+    config.vel = rl.Vector2{300.0, 0.0}
     config.color = rl.RED 
     config.lifetime = 2.0
     config.size = 10.0
 
     g_config := GravityParticleConfig{}
-    g_config.base_dist = {100.0, 50.0}
-    g_config.dist_offset = {50.0, 10.0}
-    g_config.dist_offset_jump = 10.0
+    g_config.base_dist = {42.0, 50.0}
+    g_config.dist_offset = {45.0, 45.0}
+    g_config.dist_offset_jump = 13.0
     g_config.vel_offset = 50.0
     g_config.vel_offset_jump = 5.0
 
@@ -177,10 +177,20 @@ main :: proc(){
             }
             gui_rects_cursor += 1
 
-            gui_scroll_bar(&gui_state, gui_rects[gui_rects_cursor], "ball radius", &value, 100.0, min = 20.0)
+            gui_scroll_bar(&gui_state, gui_rects[gui_rects_cursor], "velocity x", &config.vel.x, 1000.0, min = 100.0)
             gui_rects_cursor += 1
 
-            gui_scroll_bar_active(&gui_state, gui_rects[gui_rects_cursor], "ball pos x", &command, &value2, Width)
+            gui_scroll_bar(&gui_state, gui_rects[gui_rects_cursor], "base dist x", &g_config.base_dist.x, 300.0, min = 0.0)
+            gui_rects_cursor += 1
+
+            gui_scroll_bar(&gui_state, gui_rects[gui_rects_cursor], "base dist y", &g_config.base_dist.y, 300.0, min = 0.0)
+            gui_rects_cursor += 1
+
+            gui_scroll_bar(&gui_state, gui_rects[gui_rects_cursor], "base dist offset", &g_config.dist_offset.x, 100.0)
+            g_config.dist_offset.y = g_config.dist_offset.x
+            gui_rects_cursor += 1
+
+            gui_scroll_bar(&gui_state, gui_rects[gui_rects_cursor], "dist offset jump", &g_config.dist_offset_jump, 20.0, min = 0.0)
             gui_rects_cursor += 1
 
             if gui_state.resize_window{

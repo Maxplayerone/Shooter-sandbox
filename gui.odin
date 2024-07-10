@@ -170,14 +170,43 @@ gui_button :: proc(g_state: ^GuiState, rect: rl.Rectangle, title := "") -> bool{
     return clicked
 }
 
-gui_scroll_bar :: proc(g_state: ^GuiState, rect: rl.Rectangle, value: ^f32, max: f32, min: f32 = 0.0, fill_color := rl.WHITE){
+gui_scroll_bar :: proc(g_state: ^GuiState, rect: rl.Rectangle, title := "", value: ^f32, max: f32, min: f32 = 0.0, fill_color := rl.WHITE){
     rl.DrawRectangleRec(rect, rl.WHITE)
     rect_non_outline := get_non_outline_rect(rect)
 
     scroll_bar_rect, display_rect := split_rect_by_two(rect_non_outline, left_width = 0.7, padding = 2 * OutlineWidth)
+
+    //title
+    TitleBarSize :: 30.0
+    y := scroll_bar_rect.y
+
+    scroll_bar_rect.y += TitleBarSize
+    scroll_bar_rect.height -= TitleBarSize
+    display_rect.y += TitleBarSize
+    display_rect.height -= TitleBarSize
+
+    title_bar_rect := rl.Rectangle{scroll_bar_rect.x, y, rect_non_outline.width, TitleBarSize - OutlineWidth}
+
+    //blank rendering
     rl.DrawRectangleRec(scroll_bar_rect, scroll_bar_bg_color)
     rl.DrawRectangleRec(display_rect, scroll_bar_bg_color)
+    rl.DrawRectangleRec(title_bar_rect, scroll_bar_bg_color)
 
+    if title != ""{
+        scalex, ok1 := fit_text_in_line(title, 30, title_bar_rect.width - 2 * TextPadding)
+        scaley, ok2 := fit_text_in_column(30, (title_bar_rect.height - 2 * TextPadding))
+        if scalex < scaley && ok1{
+            rl.DrawText(strings.clone_to_cstring(title, context.temp_allocator), i32(title_bar_rect.x + TextPadding), i32(title_bar_rect.y + title_bar_rect.height / 4), i32(scalex), rl.WHITE)
+        }
+        else if scaley < scalex && ok2{
+            rl.DrawText(strings.clone_to_cstring(title, context.temp_allocator), i32(title_bar_rect.x + TextPadding), i32(title_bar_rect.y + title_bar_rect.height / 4), i32(scaley), rl.WHITE)
+        }
+        /*
+        if scale, ok := fit_text_in_line(title, 30, title_bar_rect.width - 2.0 * TextPadding); ok{
+            rl.DrawText(strings.clone_to_cstring(title, context.temp_allocator), i32(title_bar_rect.x + TextPadding), i32(title_bar_rect.y + title_bar_rect.height / 4), i32(scale), rl.WHITE)
+        }
+            */
+    }
 
     //fill rect stuff
     fill_rect := get_non_outline_rect(scroll_bar_rect, OutlineWidth * 2)
@@ -194,20 +223,6 @@ gui_scroll_bar :: proc(g_state: ^GuiState, rect: rl.Rectangle, value: ^f32, max:
 
     }
 
-    /*
-    max_width := fill_rect.width
-    fill_rect.width *= (value^)/max
-
-    if g_state.active_item == uiid{
-        fill_rect.width = rl.GetMousePosition().x - fill_rect.x
-    }
-    value^ = max * fill_rect.width / max_width
-
-    if value^ < min{
-        value^ = min
-    }
-    */
-
     max_width := fill_rect.width
     fill_rect.width *= rl.Normalize(value^, min, max)
 
@@ -217,43 +232,12 @@ gui_scroll_bar :: proc(g_state: ^GuiState, rect: rl.Rectangle, value: ^f32, max:
     }
 
     rl.DrawRectangleRec(fill_rect, fill_color)
+
+    //display stuff rect
+
 }
 
 /*
-scroll_bar :: proc(g_state: ^GuiState, rect: rl.Rectangle, value: ^f32, min:f32 = 0.0, max: f32, fill_color := rl.WHITE){
-
-    fill_padding := f32(2.0)
-    fill_rect := rl.Rectangle{rect.x + fill_padding, rect.y + fill_padding, rect.width - 2 * fill_padding, rect.height - 2 *fill_padding}
-
-    uiid := get_uiid()
-
-    if rl.CheckCollisionPointRec(rl.GetMousePosition(), rect){
-        g_state.hot_item = uiid 
-
-        if rl.IsMouseButtonDown(.LEFT){
-            g_state.is_window_clicked = false 
-            g_state.active_item = uiid
-            g_state.last_active_item = uiid
-        }
-
-    }
-
-    max_width := fill_rect.width
-    fill_rect.width *= (value^)/max
-
-    if g_state.active_item == uiid{
-        fill_rect.width = rl.GetMousePosition().x - fill_rect.x
-    }
-    value^ = max * fill_rect.width / max_width
-
-    if value^ < min{
-        value^ = min
-    }
-
-    rl.DrawRectangleRec(fill_rect, fill_color)
-
-}
-
 display_active :: proc(g_state: ^GuiState, command:  ^[dynamic]rl.KeyboardKey, rect: rl.Rectangle, value: ^f32){
     outline_width := f32(2.0)
     outline_rect := get_outline_rect(rect, outline_width)

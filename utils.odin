@@ -78,6 +78,18 @@ fit_text_in_line :: proc(text: string, scale: int, width: f32, min_scale := 15) 
     return scale, true
 }
 
+fit_text_in_column :: proc(scale: int, height: f32, min_scale: f32 = 15) -> (int, bool){
+    if f32(scale) < height{
+        return scale, true
+    }
+    else if height >= min_scale{
+        return int(height), true
+    }
+    else{
+        return 0, false
+    }
+}
+
 to_string_only_numbers :: proc(command: [dynamic]rl.KeyboardKey) -> string{
     b := strings.builder_make(context.temp_allocator)
     for c in command{

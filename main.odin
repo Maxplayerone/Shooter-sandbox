@@ -213,7 +213,7 @@ main :: proc(){
             }
             gui_rects_cursor += 1
 
-            gui_scroll_bar(&gui_state, gui_rects[gui_rects_cursor], &value, 100.0, min = 20.0)
+            gui_scroll_bar(&gui_state, gui_rects[gui_rects_cursor], "ball radius", &value, 100.0, min = 20.0)
             gui_rects_cursor += 1
 
             if gui_button(&gui_state, gui_rects[gui_rects_cursor], "test 2"){

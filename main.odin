@@ -62,19 +62,18 @@ main :: proc(){
         append(&enemies, enemy)
     }
 
-    window_rect := rl.Rectangle{11, 10, 427, 621}
     gui_state := GuiState{}
+    /*
+    window_rect := rl.Rectangle{11, 10, 427, 621}
 
     gui_rects := generate_rects_for_window(window_rect, 7)
 
     show_gui := true 
 
     command: [dynamic]rl.KeyboardKey
+    */
 
     particles: [dynamic]Particle
-    StartingPos := rl.Vector2{480.0, 590.0}
-    time_btw_spawns := f32(0.3)
-    start_time_btw_spawns := time_btw_spawns
 
     config := ParticleConfig{}
     config.pos = rl.Vector2{700.0, 590.0}
@@ -92,12 +91,12 @@ main :: proc(){
 
     enemy_death_effect := ParticleInstancer{}
 
-    value := f32(60.0)
-    value2 := f32(Width / 2)
     for !rl.WindowShouldClose(){
 
+        //player update
         player_update(&player, &player_mo, &bullets, blocks, gui_state)
 
+        //bullets update
         for i in 0..<len(bullets){
             bullet_update(&bullets[i])
             for block in blocks{
@@ -108,9 +107,16 @@ main :: proc(){
             }
         }
 
+        //enemies update
         for i in 0..<len(enemies){
             for j in 0..<len(bullets){
                 if rl.CheckCollisionCircleRec(bullets[j].pos, bullets[j].radius, get_rect(enemies[i].pos, enemies[i].size)){
+
+                    config.pos = enemies[i].pos
+                    for i in 0..<10{
+                        append(&enemy_death_effect.buf, spawn_particle_gravity(g_config, config))
+                    }
+                    //spawn particles
                     unordered_remove(&enemies, i)
                     unordered_remove(&bullets, j)
                     break
@@ -118,11 +124,12 @@ main :: proc(){
             }
         }
 
+        //particles update
         particle_inst_update(&enemy_death_effect, blocks)
 
         //debug------------------------------------------------------
         if rl.IsKeyPressed(.I){
-            show_gui = !show_gui
+            reset_gravity_particles(&enemy_death_effect.buf)
         }
         if rl.IsKeyPressed(.O){
             player_mo.only_draw_last_segment = !player_mo.only_draw_last_segment
@@ -136,82 +143,30 @@ main :: proc(){
         rl.BeginDrawing()
         rl.ClearBackground(rl.BLACK)
 
+        //enemies
         for enemy in enemies{
             enemy_render(enemy)
         }
 
+        //player
         player_render(player)
 
+        //bullet
         for bullet in bullets{
             bullet_render(bullet)
         }
 
+        //obstacles
         for block in blocks{
             rl.DrawRectangleRec(block, rl.WHITE)
         }
 
+        //particle
         particle_inst_render(enemy_death_effect)
 
-        if show_gui{
-            uiid = 0
-            gui_state.active_item = 0
-            gui_state.hot_item = 0
-            gui_rects_cursor := 0
-
-            gui_window(&gui_state, window_rect, "particle simulation")
-
-            if gui_button(&gui_state, gui_rects[gui_rects_cursor], "reset"){
-                for i in 0..<len(enemy_death_effect.buf){
-                    enemy_death_effect.buf[i].pos = enemy_death_effect.buf[i].starting_pos
-                    enemy_death_effect.buf[i].lifetime = enemy_death_effect.buf[i].starting_lifetime
-                    enemy_death_effect.buf[i].size = enemy_death_effect.buf[i].starting_size
-                    enemy_death_effect.buf[i].vel = enemy_death_effect.buf[i].starting_vel
-                }
-            }
-            gui_rects_cursor += 1
-
-            if gui_button(&gui_state, gui_rects[gui_rects_cursor], "spawn 10"){
-                for i in 0..<10{
-                    append(&enemy_death_effect.buf, spawn_particle_gravity(g_config, config))
-                }
-            }
-            gui_rects_cursor += 1
-
-            gui_scroll_bar(&gui_state, gui_rects[gui_rects_cursor], "velocity x", &config.vel.x, 1000.0, min = 100.0)
-            gui_rects_cursor += 1
-
-            gui_scroll_bar(&gui_state, gui_rects[gui_rects_cursor], "base dist x", &g_config.base_dist.x, 300.0, min = 0.0)
-            gui_rects_cursor += 1
-
-            gui_scroll_bar(&gui_state, gui_rects[gui_rects_cursor], "base dist y", &g_config.base_dist.y, 300.0, min = 0.0)
-            gui_rects_cursor += 1
-
-            gui_scroll_bar(&gui_state, gui_rects[gui_rects_cursor], "base dist offset", &g_config.dist_offset.x, 100.0)
-            g_config.dist_offset.y = g_config.dist_offset.x
-            gui_rects_cursor += 1
-
-            gui_scroll_bar(&gui_state, gui_rects[gui_rects_cursor], "dist offset jump", &g_config.dist_offset_jump, 20.0, min = 0.0)
-            gui_rects_cursor += 1
-
-            if gui_state.resize_window{
-                window_rect.width += rl.GetMouseDelta().x
-                window_rect.height += rl.GetMouseDelta().y
-                gui_state.resize_window = false
-                gui_state.is_window_clicked = false
-
-                regenerate_rects_for_window(window_rect, &gui_rects) 
-            }
-
-            if gui_state.is_window_clicked{
-                window_rect.x += rl.GetMouseDelta().x
-                window_rect.y += rl.GetMouseDelta().y
-                gui_state.is_window_clicked = false
-
-                regenerate_rects_for_window(window_rect, &gui_rects) 
-            }
-        }
-
+        //move outlines
         move_outline_render(player_mo)
+        rl.DrawFPS(0, 0)
 
         rl.EndDrawing()
 
@@ -222,10 +177,10 @@ main :: proc(){
     delete(bullets)
     delete(blocks)
     delete(enemies)
-    delete(command)
+    //delete(command)
     delete(particles)
     delete(enemy_death_effect.buf)
-    delete(gui_rects)
+    //delete(gui_rects)
 
     rl.CloseWindow()
 

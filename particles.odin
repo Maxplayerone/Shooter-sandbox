@@ -68,15 +68,27 @@ spawn_particle_gravity :: proc(gravity_config: GravityParticleConfig, config: Pa
     return p
 }
 
+//may also be for normal particles but I'm not sure
+reset_gravity_particles :: proc(particles: ^[dynamic]Particle){
+     for i in 0..<len(particles){
+        particles[i].pos = particles[i].starting_pos
+        particles[i].lifetime = particles[i].starting_lifetime
+        particles[i].size = particles[i].starting_size
+        particles[i].vel = particles[i].starting_vel
+    }
+}
+
 ParticleInstancer :: struct{
     buf: [dynamic]Particle,
-    time_btw_spawns: f32,
-    start_time_btw_spawns: f32,
 }
 
 particle_inst_update :: proc(pi: ^ParticleInstancer, blocks: [dynamic]rl.Rectangle){
-    for &p in pi.buf{
+    for &p, i in pi.buf{
         particle_update(&p, blocks)
+
+        if p.lifetime <= 0{
+            unordered_remove(&pi.buf, i)
+        }
     }
 }
 

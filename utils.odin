@@ -97,3 +97,18 @@ get_ver_speed :: proc(dist: rl.Vector2, hor_speed: f32) -> f32{
     hor_speed := math.abs(hor_speed)
     return 2.0 * dist.y * hor_speed / dist.x
 }
+
+split_rect_by_two :: proc(rect: rl.Rectangle, left_width:f32 = 0.5, padding: f32 = 0.0) -> (rl.Rectangle, rl.Rectangle){
+    if left_width > 1.0 && left_width < 0.0{
+        assert(false, "Error: left_width should be in a (0.0, 1.0) range")
+    }
+
+    left_rect := rect
+    left_rect.width = rect.width * left_width
+
+    right_rect := rect
+    right_rect.width = rect.width * (1.0 - left_width) - padding
+    right_rect.x += rect.width * left_width + padding
+
+    return left_rect, right_rect
+}

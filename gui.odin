@@ -37,8 +37,8 @@ GuiState :: struct{
     resize_window: bool,
 }
 
-get_non_outline_rect :: proc(rect: rl.Rectangle) -> rl.Rectangle{
-    return rl.Rectangle{rect.x + OutlineWidth, rect.y + OutlineWidth, rect.width - 2 * OutlineWidth, rect.height - 2 * OutlineWidth}
+get_non_outline_rect :: proc(rect: rl.Rectangle, outline: f32 = OutlineWidth) -> rl.Rectangle{
+    return rl.Rectangle{rect.x + outline, rect.y + outline, rect.width - 2 * outline, rect.height - 2 * outline}
 }
 
 split_window_rect :: proc(rect: rl.Rectangle) -> (rl.Rectangle, rl.Rectangle, rl.Rectangle){
@@ -48,21 +48,6 @@ split_window_rect :: proc(rect: rl.Rectangle) -> (rl.Rectangle, rl.Rectangle, rl
     rect3 := rl.Rectangle{rect_non_outline.x, rect_non_outline.y + WindowBarHeight + OutlineWidth, rect_non_outline.width, rect_non_outline.height - WindowBarHeight - OutlineWidth}
     return rect1, rect2, rect3
 }
-
-/*
-split_rects :: proc(rects: ^[dynamic]rl.Rectangle, split_index: int){
-    original_rect := rects[split_index]
-    left_rect := original_rect
-    left_rect.width *= 0.5
-
-    right_rect := original_rect
-    right_rect.width *= 0.5
-    right_rect.x += original_rect.width * 0.5
-
-    rects[split_index] = left_rect
-    inject_at(&(rects^), split_index + 1, right_rect)
-}
-    */
 
 generate_rects_for_window :: proc(window_rect: rl.Rectangle, items_count: f32) -> [dynamic]rl.Rectangle{
     items: [dynamic]rl.Rectangle
@@ -185,57 +170,57 @@ gui_button :: proc(g_state: ^GuiState, rect: rl.Rectangle, title := "") -> bool{
     return clicked
 }
 
-/*
-button :: proc(g_state: ^GuiState, rect: rl.Rectangle, title := "") -> bool{
-    clicked: bool 
+gui_scroll_bar :: proc(g_state: ^GuiState, rect: rl.Rectangle, value: ^f32, max: f32, min: f32 = 0.0, fill_color := rl.WHITE){
+    rl.DrawRectangleRec(rect, rl.WHITE)
+    rect_non_outline := get_non_outline_rect(rect)
 
-    outline_width:f32 = 2.0
-    rl.DrawRectangleRec({rect.x - outline_width, rect.y - outline_width, rect.width + 2.0 * outline_width, rect.height + 2.0 * outline_width}, rl.WHITE)
+    scroll_bar_rect, display_rect := split_rect_by_two(rect_non_outline, left_width = 0.7, padding = 2 * OutlineWidth)
+    rl.DrawRectangleRec(scroll_bar_rect, scroll_bar_bg_color)
+    rl.DrawRectangleRec(display_rect, scroll_bar_bg_color)
+
+
+    //fill rect stuff
+    fill_rect := get_non_outline_rect(scroll_bar_rect, OutlineWidth * 2)
 
     uiid := get_uiid()
 
-    if rl.CheckCollisionPointRec(rl.GetMousePosition(), rect){
+    if rl.CheckCollisionPointRec(rl.GetMousePosition(), fill_rect){
         g_state.hot_item = uiid 
 
         if rl.IsMouseButtonDown(.LEFT){
             g_state.is_window_clicked = false 
+            g_state.active_item = uiid
         }
 
-        if rl.IsMouseButtonPressed(.LEFT){
-            g_state.active_item = uiid 
-            clicked = true
-            g_state.last_active_item = uiid
-        }
     }
 
-    if g_state.hot_item == uiid{
-        if g_state.active_item == uiid{
-            rl.DrawRectangleRec(rect, button_active_color)
-        }
-        else{
-            rl.DrawRectangleRec(rect, button_hot_color)
-        }
+    /*
+    max_width := fill_rect.width
+    fill_rect.width *= (value^)/max
+
+    if g_state.active_item == uiid{
+        fill_rect.width = rl.GetMousePosition().x - fill_rect.x
     }
-    else{
-        rl.DrawRectangleRec(rect, button_color)
+    value^ = max * fill_rect.width / max_width
+
+    if value^ < min{
+        value^ = min
+    }
+    */
+
+    max_width := fill_rect.width
+    fill_rect.width *= rl.Normalize(value^, min, max)
+
+    if g_state.active_item == uiid{
+        fill_rect.width = rl.GetMousePosition().x - fill_rect.x
+        value^ = (max - min) * fill_rect.width / max_width + min
     }
 
-    if title != ""{
-        text_padding: f32 = 8.0
-        if scale, ok := fit_text_in_line(title, 30, rect.width - 2.0 * text_padding); ok{
-            rl.DrawText(strings.clone_to_cstring(title, context.temp_allocator), i32(rect.x + text_padding), i32(rect.y + rect.height / 4), i32(scale), rl.WHITE)
-        }
-    }
-
-    return clicked
+    rl.DrawRectangleRec(fill_rect, fill_color)
 }
 
-
+/*
 scroll_bar :: proc(g_state: ^GuiState, rect: rl.Rectangle, value: ^f32, min:f32 = 0.0, max: f32, fill_color := rl.WHITE){
-    outline_width:f32 = 2.0
-    rl.DrawRectangleRec({rect.x - outline_width, rect.y - outline_width, rect.width + 2.0 * outline_width, rect.height + 2.0 * outline_width}, rl.WHITE)
-
-    rl.DrawRectangleRec(rect, scroll_bar_bg_color)
 
     fill_padding := f32(2.0)
     fill_rect := rl.Rectangle{rect.x + fill_padding, rect.y + fill_padding, rect.width - 2 * fill_padding, rect.height - 2 *fill_padding}

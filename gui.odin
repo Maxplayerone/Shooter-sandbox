@@ -16,13 +16,16 @@ get_uiid :: proc() -> int{
 //GLOBALS
 OutlineWidth :: 2.0
 TextPadding :: 5.0
+ItemPadding :: 10.0
+
 //window
 WindowBarHeight :: 40.0
 WindowColor :: rl.Color{45, 45, 45, 255}
 
-button_color :: rl.Color{121, 122, 122, 255}
-button_hot_color :: rl.Color{93, 94, 94, 255}
-button_active_color :: rl.Color{30, 30, 30, 255}
+//button
+ButtonColor :: rl.Color{121, 122, 122, 255}
+ButtonHotColor :: rl.Color{93, 94, 94, 255}
+ButtonActiveColor :: rl.Color{30, 30, 30, 255}
 
 scroll_bar_bg_color :: rl.Color{80, 80, 80, 255}
 
@@ -34,28 +37,8 @@ GuiState :: struct{
     resize_window: bool,
 }
 
-/*
-rel_to_window :: proc(window_rect: rl.Rectangle, pos_percentage: rl.Vector2, scale_percentage: rl.Vector2) -> rl.Rectangle{
-    rect := rl.Rectangle{}
-    rect.x = window_rect.x + window_rect.width * pos_percentage.x
-    rect.y = window_rect.y + window_rect.height * pos_percentage.y
-    rect.width = window_rect.width * scale_percentage.x
-    rect.height = window_rect.height * scale_percentage.y
-    return rect
-}
-*/
-
-get_outline_rect :: proc(rect: rl.Rectangle) -> rl.Rectangle{
-    return rl.Rectangle{rect.x - OutlineWidth, rect.y - OutlineWidth, rect.width + 2 * OutlineWidth, rect.height + 2 * OutlineWidth} 
-}
-
 get_non_outline_rect :: proc(rect: rl.Rectangle) -> rl.Rectangle{
     return rl.Rectangle{rect.x + OutlineWidth, rect.y + OutlineWidth, rect.width - 2 * OutlineWidth, rect.height - 2 * OutlineWidth}
-}
-
-create_window_body_rect :: proc(rect: rl.Rectangle) -> rl.Rectangle{
-    _, _, body := split_window_rect(rect)
-    return body 
 }
 
 split_window_rect :: proc(rect: rl.Rectangle) -> (rl.Rectangle, rl.Rectangle, rl.Rectangle){
@@ -64,6 +47,40 @@ split_window_rect :: proc(rect: rl.Rectangle) -> (rl.Rectangle, rl.Rectangle, rl
     rect2 := rl.Rectangle{rect_non_outline.x, rect_non_outline.y + WindowBarHeight, rect_non_outline.width, OutlineWidth}
     rect3 := rl.Rectangle{rect_non_outline.x, rect_non_outline.y + WindowBarHeight + OutlineWidth, rect_non_outline.width, rect_non_outline.height - WindowBarHeight - OutlineWidth}
     return rect1, rect2, rect3
+}
+
+generate_rects_for_window :: proc(window_rect: rl.Rectangle, items_count: f32) -> [dynamic]rl.Rectangle{
+    items: [dynamic]rl.Rectangle
+    _, _, body_rect := split_window_rect(window_rect)
+
+    height := (body_rect.height - items_count * ItemPadding) / items_count
+
+    body_rect.y += ItemPadding
+    for i in 0..<items_count{
+        item_rect: rl.Rectangle
+        item_rect.x = body_rect.x + ItemPadding
+        item_rect.y = body_rect.y + (ItemPadding + height) * f32(i)
+        item_rect.width = body_rect.width - 2 * ItemPadding 
+        item_rect.height = height 
+        append(&items, item_rect)
+    }
+    return items
+}
+
+regenerate_rects_for_window :: proc(window_rect: rl.Rectangle, rects: ^[dynamic]rl.Rectangle){
+    _, _, body_rect := split_window_rect(window_rect)
+
+    count := len(rects)
+    height := (body_rect.height - f32(count) * ItemPadding) / f32(count)
+    body_rect.y += ItemPadding
+    for i in 0..<count{
+        item_rect: rl.Rectangle
+        item_rect.x = body_rect.x + ItemPadding
+        item_rect.y = body_rect.y + (ItemPadding + height) * f32(i)
+        item_rect.width = body_rect.width - 2 * ItemPadding 
+        item_rect.height = height 
+        rects[i] = item_rect
+    }
 }
 
 gui_window :: proc(g_state: ^GuiState, rect: rl.Rectangle, title := "my window"){
@@ -107,6 +124,50 @@ gui_window :: proc(g_state: ^GuiState, rect: rl.Rectangle, title := "my window")
 
     //body
     rl.DrawRectangleRec(body_rect, WindowColor)
+}
+
+gui_button :: proc(g_state: ^GuiState, rect: rl.Rectangle, title := "") -> bool{
+    clicked: bool
+
+    rl.DrawRectangleRec(rect, rl.WHITE)
+
+    uiid := get_uiid()
+
+    if rl.CheckCollisionPointRec(rl.GetMousePosition(), rect){
+        g_state.hot_item = uiid 
+
+        if rl.IsMouseButtonDown(.LEFT){
+            g_state.is_window_clicked = false 
+        }
+
+        if rl.IsMouseButtonPressed(.LEFT){
+            g_state.active_item = uiid 
+            clicked = true
+        }
+    }
+
+    //button rendering
+    button_rect := get_non_outline_rect(rect)
+    if g_state.hot_item == uiid{
+        if g_state.active_item == uiid{
+            rl.DrawRectangleRec(button_rect, ButtonActiveColor)
+        }
+        else{
+            rl.DrawRectangleRec(button_rect, ButtonActiveColor)
+        }
+    }
+    else{
+        rl.DrawRectangleRec(button_rect, ButtonColor)
+    }
+
+    //text
+    if title != ""{
+        if scale, ok := fit_text_in_line(title, 30, button_rect.width - 2.0 * TextPadding); ok{
+            rl.DrawText(strings.clone_to_cstring(title, context.temp_allocator), i32(button_rect.x + TextPadding), i32(button_rect.y + button_rect.height / 4), i32(scale), rl.WHITE)
+        }
+    }
+
+    return clicked
 }
 
 /*

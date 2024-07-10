@@ -62,17 +62,13 @@ main :: proc(){
         append(&enemies, enemy)
     }
 
+    window_rect := rl.Rectangle{50.0, 10.0, 300.0, 400.0}
     gui_state := GuiState{}
-    draw_rect := true
-    rect_color := rl.GREEN
-
-    window_full_rect := rl.Rectangle{50.0, 10.0, 300.0, 400.0}
-    window_rect := create_window_body_rect(window_full_rect)
+    gui_rects := generate_rects_for_window(window_rect, 3)
 
     show_gui := true 
 
     command: [dynamic]rl.KeyboardKey
-
 
     particles: [dynamic]Particle
     StartingPos := rl.Vector2{480.0, 590.0}
@@ -199,20 +195,41 @@ main :: proc(){
         }
         */
         uiid = 0
+        gui_state.active_item = 0
+        gui_state.hot_item = 0
+        gui_rects_cursor := 0
+
         if show_gui{
-            gui_window(&gui_state, window_full_rect, "gui window")
+            gui_window(&gui_state, window_rect, "gui window")
+
+            if gui_button(&gui_state, gui_rects[gui_rects_cursor], "hi"){
+                fmt.println("bye")
+            }
+            gui_rects_cursor += 1
+
+            gui_button(&gui_state, gui_rects[gui_rects_cursor], "test")
+            gui_rects_cursor += 1
+
+            if gui_button(&gui_state, gui_rects[gui_rects_cursor], "test 2"){
+                fmt.println("hi")
+            }
+            gui_rects_cursor += 1
 
             if gui_state.resize_window{
-                window_full_rect.width += rl.GetMouseDelta().x
-                window_full_rect.height += rl.GetMouseDelta().y
+                window_rect.width += rl.GetMouseDelta().x
+                window_rect.height += rl.GetMouseDelta().y
                 gui_state.resize_window = false
                 gui_state.is_window_clicked = false
+
+                regenerate_rects_for_window(window_rect, &gui_rects) 
             }
 
             if gui_state.is_window_clicked{
-                window_full_rect.x += rl.GetMouseDelta().x
-                window_full_rect.y += rl.GetMouseDelta().y
+                window_rect.x += rl.GetMouseDelta().x
+                window_rect.y += rl.GetMouseDelta().y
                 gui_state.is_window_clicked = false
+
+                regenerate_rects_for_window(window_rect, &gui_rects) 
             }
         }
 
@@ -230,6 +247,7 @@ main :: proc(){
     delete(command)
     delete(particles)
     delete(enemy_death_effect.buf)
+    delete(gui_rects)
 
     rl.CloseWindow()
 

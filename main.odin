@@ -94,6 +94,7 @@ main :: proc(){
     enemy_death_effect := ParticleInstancer{}
 
     value := f32(60.0)
+    value2 := f32(Width / 2)
     for !rl.WindowShouldClose(){
 
         player_update(&player, &player_mo, &bullets, blocks, gui_state)
@@ -152,73 +153,27 @@ main :: proc(){
 
         particle_inst_render(enemy_death_effect)
 
-        /*
-        if show_gui{
-            window(&gui_state, window_rect, 40.0, "particle system")
-
-            if button(&gui_state, rel_to_window(window_rect, {0.1, 0.07}, {0.3, 0.08}), "reset"){
-                /*
-                for i in 0..<len(particles){
-                    particles[i].pos = StartingPos
-                    if particles[i].is_gravity{
-                        particles[i].vel.y = get_ver_speed(particles[i].dist, particles[i].vel.x)
-                    }
-                    particles[i].lifetime = 2.0
-                }
-                    */
-            }
-
-            if button(&gui_state, rel_to_window(window_rect, {0.1, 0.2}, {0.4, 0.1}), "spawn particle"){
-                append(&enemy_death_effect.buf, spawn_particle_gravity(g_config, config))
-            }
-
-            if button(&gui_state, rel_to_window(window_rect, {0.1, 0.35}, {0.4, 0.1}), "spawn 10"){
-                for i in 0..<10{
-                    append(&enemy_death_effect.buf, spawn_particle_gravity(g_config, config))
-                }
-            }
-
-            //text(rel_to_window(window_rect, {0.1, 0.18}, {0.3, 0.08}), "min velocity")
-            //scroll_bar(&gui_state, rel_to_window(window_rect, {0.1, 0.25}, {0.3, 0.08}), &angle, max = 90.0)
-            //display_active(&gui_state, &command, rel_to_window(window_rect, {0.5, 0.25}, {0.2, 0.05}), &angle)
-
-            if gui_state.resize_window{
-                window_rect.width += rl.GetMouseDelta().x
-                window_rect.height += rl.GetMouseDelta().y
-                gui_state.resize_window = false
-                gui_state.is_window_clicked = false
-            }
-
-            if gui_state.is_window_clicked{
-                window_rect.x += rl.GetMouseDelta().x
-                window_rect.y += rl.GetMouseDelta().y
-                gui_state.is_window_clicked = false
-            }
-        }
-        */
-        uiid = 0
-        gui_state.active_item = 0
-        gui_state.hot_item = 0
-        gui_rects_cursor := 0
+        rl.DrawCircleV({value2, Height / 2}, value, rl.ORANGE)
 
         if show_gui{
+            uiid = 0
+            gui_state.active_item = 0
+            gui_state.hot_item = 0
+            gui_rects_cursor := 0
+
             gui_window(&gui_state, window_rect, "gui window")
 
             if gui_button(&gui_state, gui_rects[gui_rects_cursor], "save"){
-                fmt.println("bye")
             }
             gui_rects_cursor += 1
             if gui_button(&gui_state, gui_rects[gui_rects_cursor], "quit"){
-                fmt.println("bye")
             }
             gui_rects_cursor += 1
 
             gui_scroll_bar(&gui_state, gui_rects[gui_rects_cursor], "ball radius", &value, 100.0, min = 20.0)
             gui_rects_cursor += 1
 
-            if gui_button(&gui_state, gui_rects[gui_rects_cursor], "test 2"){
-                fmt.println("hi")
-            }
+            gui_scroll_bar_active(&gui_state, gui_rects[gui_rects_cursor], "ball pos x", &command, &value2, Width)
             gui_rects_cursor += 1
 
             if gui_state.resize_window{
@@ -238,8 +193,6 @@ main :: proc(){
                 regenerate_rects_for_window(window_rect, &gui_rects) 
             }
         }
-
-        rl.DrawCircleV({Width / 2, Height / 2}, value, rl.ORANGE)
 
         move_outline_render(player_mo)
 

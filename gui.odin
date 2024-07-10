@@ -32,6 +32,7 @@ scroll_bar_bg_color :: rl.Color{80, 80, 80, 255}
 GuiState :: struct{
     hot_item: int,
     active_item: int,
+    active_item_non_reset: int,
 
     is_window_clicked: bool,
     resize_window: bool,
@@ -139,6 +140,7 @@ gui_button :: proc(g_state: ^GuiState, rect: rl.Rectangle, title := "") -> bool{
 
         if rl.IsMouseButtonPressed(.LEFT){
             g_state.active_item = uiid 
+            g_state.active_item_non_reset = uiid
             clicked = true
         }
     }
@@ -202,6 +204,7 @@ gui_scroll_bar :: proc(g_state: ^GuiState, rect: rl.Rectangle, title := "", valu
         if rl.IsMouseButtonDown(.LEFT){
             g_state.is_window_clicked = false 
             g_state.active_item = uiid
+            g_state.active_item_non_reset = uiid
         }
 
     }
@@ -225,83 +228,103 @@ gui_scroll_bar :: proc(g_state: ^GuiState, rect: rl.Rectangle, title := "", valu
     adjust_and_draw_text(str, display_rect, TextPadding, 30)
 }
 
-/*
-display_active :: proc(g_state: ^GuiState, command:  ^[dynamic]rl.KeyboardKey, rect: rl.Rectangle, value: ^f32){
-    outline_width := f32(2.0)
-    outline_rect := get_outline_rect(rect, outline_width)
-    rl.DrawRectangleRec(outline_rect, rl.WHITE)
-    rl.DrawRectangleRec(rect, scroll_bar_bg_color)
+//scroll bar but you can change the display
+gui_scroll_bar_active :: proc(g_state: ^GuiState, rect: rl.Rectangle, title := "", command: ^[dynamic]rl.KeyboardKey, value: ^f32, max: f32, min: f32 = 0.0, fill_color := rl.WHITE){
+    rl.DrawRectangleRec(rect, rl.WHITE)
+    rect_non_outline := get_non_outline_rect(rect)
+
+    scroll_bar_rect, display_rect := split_rect_by_two(rect_non_outline, left_width = 0.7, padding = 2 * OutlineWidth)
+
+    //title
+    TitleBarSize :: 30.0
+    y := scroll_bar_rect.y
+
+    scroll_bar_rect.y += TitleBarSize
+    scroll_bar_rect.height -= TitleBarSize
+    display_rect.y += TitleBarSize
+    display_rect.height -= TitleBarSize
+
+    title_bar_rect := rl.Rectangle{scroll_bar_rect.x, y, rect_non_outline.width, TitleBarSize - OutlineWidth}
+
+    //blank rendering
+    rl.DrawRectangleRec(scroll_bar_rect, scroll_bar_bg_color)
+    rl.DrawRectangleRec(display_rect, scroll_bar_bg_color)
+    rl.DrawRectangleRec(title_bar_rect, scroll_bar_bg_color)
+
+    if title != ""{
+        adjust_and_draw_text(title, title_bar_rect, TextPadding, 30)
+    }
+
+    //fill rect stuff
+    fill_rect := get_non_outline_rect(scroll_bar_rect, OutlineWidth * 2)
 
     uiid := get_uiid()
 
-    if rl.CheckCollisionPointRec(rl.GetMousePosition(), rect){
+    if rl.CheckCollisionPointRec(rl.GetMousePosition(), fill_rect){
         g_state.hot_item = uiid 
 
         if rl.IsMouseButtonDown(.LEFT){
             g_state.is_window_clicked = false 
-            g_state.last_active_item = uiid
+            g_state.active_item = uiid
+            g_state.active_item_non_reset = uiid
         }
 
-        if rl.IsMouseButtonPressed(.LEFT){
-            g_state.active_item = uiid
-        }
     }
 
-    //getting the scroll bar value to string
-    buf: [8]byte
-    text_padding := f32(5.0)
-    str := strconv.ftoa(buf[:], f64(value^), 'f', 2, 32)
+    max_width := fill_rect.width
+    fill_rect.width *= rl.Normalize(value^, min, max)
 
-    //pulling user input and possibly changing the string
-    if key := rl.GetKeyPressed(); g_state.last_active_item == uiid && key != .KEY_NULL{
-        if key == .BACKSPACE{
-            if len(command) > 0{
-                pop(command)
+    if g_state.active_item == uiid{
+        clear(command)
+        
+        fill_rect.width = rl.GetMousePosition().x - fill_rect.x
+        value^ = (max - min) * fill_rect.width / max_width + min
+    }
+
+    rl.DrawRectangleRec(fill_rect, fill_color)
+
+    //display stuff rect
+    uiid_display := get_uiid()
+
+    if rl.CheckCollisionPointRec(rl.GetMousePosition(), display_rect){
+        g_state.hot_item = uiid 
+
+        if g_state.active_item_non_reset == uiid{
+            if key := rl.GetKeyPressed(); key != .KEY_NULL{
+                if key == .BACKSPACE{
+                    if len(command) > 0{
+                        pop(command)
+                    }
+                }
+                else if key == .ENTER{
+                    g_state.active_item_non_reset = 0
+                }
+                else{
+                    append(command, key)
+                }
             }
         }
-        else if key == .ENTER{
-            g_state.last_active_item = 0
+
+        if rl.IsMouseButtonDown(.LEFT){
+            g_state.is_window_clicked = false 
+            g_state.active_item = uiid
+            g_state.active_item_non_reset = uiid
         }
-        else{
-            append(command, key)
-        }
+
     }
 
-    if len(command) != 0 && g_state.last_active_item == uiid{
+
+    buf: [8]byte
+    str := strconv.ftoa(buf[:], f64(value^), 'f', 2, 32)
+
+    if len(command) != 0 && g_state.active_item_non_reset == uiid{
         str = to_string_only_numbers(command^)
         value^ = f32(strconv.atof(str))
     }
 
-    if scale, ok := fit_text_in_line(str, 30.0, rect.width - 2 * text_padding, min_scale = 5); ok{
-        rl.DrawText(strings.clone_to_cstring(str, context.temp_allocator), i32(rect.x + text_padding), i32(rect.y + rect.height / 4), i32(scale), rl.WHITE)
+    if str[0] == '+'{
+        str = str[1:]
     }
-
+    
+    adjust_and_draw_text(str, display_rect, TextPadding, 30)
 }
-
-display :: proc(rect: rl.Rectangle, value: ^f32){
-    outline_width := f32(2.0)
-    outline_rect := get_outline_rect(rect, outline_width)
-    rl.DrawRectangleRec(outline_rect, rl.WHITE)
-    rl.DrawRectangleRec(rect, scroll_bar_bg_color)
-
-    buf: [8]byte
-    text_padding := f32(5.0)
-    str := strconv.ftoa(buf[:], f64(value^), 'f', 2, 32)
-
-    if scale, ok := fit_text_in_line(str, 30.0, rect.width - 2 * text_padding, min_scale = 5); ok{
-        rl.DrawText(strings.clone_to_cstring(str, context.temp_allocator), i32(rect.x + text_padding), i32(rect.y + rect.height / 4), i32(scale), rl.WHITE)
-    }
-}
-
-text :: proc(rect: rl.Rectangle, title: string){
-    outline_width := f32(2.0)
-    outline_rect := get_outline_rect(rect, outline_width)
-    rl.DrawRectangleRec(outline_rect, rl.WHITE)
-    rl.DrawRectangleRec(rect, scroll_bar_bg_color)
-
-    text_padding := f32(5.0)
-    if scale, ok := fit_text_in_line(title, 30.0, rect.width - 2 * text_padding, min_scale = 5); ok{
-        rl.DrawText(strings.clone_to_cstring(title, context.temp_allocator), i32(rect.x + text_padding), i32(rect.y + rect.height / 4), i32(scale), rl.WHITE)
-    }
-}
-    */

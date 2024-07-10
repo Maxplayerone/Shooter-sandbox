@@ -66,7 +66,8 @@ main :: proc(){
     draw_rect := true
     rect_color := rl.GREEN
 
-    window_rect := rl.Rectangle{50.0, 50.0, 300.0, 400.0}
+    window_full_rect := rl.Rectangle{50.0, 10.0, 300.0, 400.0}
+    window_rect := create_window_body_rect(window_full_rect)
 
     show_gui := true 
 
@@ -121,10 +122,6 @@ main :: proc(){
 
         particle_inst_update(&enemy_death_effect, blocks)
 
-        gui_state.hot_item = 0
-        gui_state.active_item = 0
-        uiid = 0
-
         //debug------------------------------------------------------
         if rl.IsKeyPressed(.I){
             show_gui = !show_gui
@@ -157,6 +154,7 @@ main :: proc(){
 
         particle_inst_render(enemy_death_effect)
 
+        /*
         if show_gui{
             window(&gui_state, window_rect, 40.0, "particle system")
 
@@ -196,6 +194,24 @@ main :: proc(){
             if gui_state.is_window_clicked{
                 window_rect.x += rl.GetMouseDelta().x
                 window_rect.y += rl.GetMouseDelta().y
+                gui_state.is_window_clicked = false
+            }
+        }
+        */
+        uiid = 0
+        if show_gui{
+            gui_window(&gui_state, window_full_rect, "gui window")
+
+            if gui_state.resize_window{
+                window_full_rect.width += rl.GetMouseDelta().x
+                window_full_rect.height += rl.GetMouseDelta().y
+                gui_state.resize_window = false
+                gui_state.is_window_clicked = false
+            }
+
+            if gui_state.is_window_clicked{
+                window_full_rect.x += rl.GetMouseDelta().x
+                window_full_rect.y += rl.GetMouseDelta().y
                 gui_state.is_window_clicked = false
             }
         }

@@ -63,15 +63,9 @@ main :: proc(){
     }
 
     gui_state := GuiState{}
-    /*
     window_rect := rl.Rectangle{11, 10, 427, 621}
-
-    gui_rects := generate_rects_for_window(window_rect, 7)
-
-    show_gui := true 
-
+    gui_rects := generate_rects_for_window(window_rect, 5)
     command: [dynamic]rl.KeyboardKey
-    */
 
     particles: [dynamic]Particle
 
@@ -90,6 +84,17 @@ main :: proc(){
     g_config.vel_offset_jump = 5.0
 
     enemy_death_effect := ParticleInstancer{}
+
+    config2 := ParticleConfig{}
+    config2.pos = {700.0, 590.0}
+    config2.vel = {50.0, 0.0}
+    config2.color = rl.Color{255, 0, 0, 125}
+    config2.lifetime = 1.6
+    config2.size = 16.0
+    config2.modify_vel = true
+    p := spawn_particle(config2)
+
+    enemy_spawn_effect := ParticleInstancer{}
 
     for !rl.WindowShouldClose(){
 
@@ -126,8 +131,18 @@ main :: proc(){
 
         //particles update
         particle_inst_update(&enemy_death_effect, blocks)
+        particle_inst_update(&enemy_spawn_effect, blocks)
 
         //debug------------------------------------------------------
+        if rl.IsKeyPressed(.U){
+            for i in 0..<10{ 
+                rand_angle := f32(rand.int31() % 45)
+                sign: f32 = rand.int31()  % 2 == 0 ? 1.0 : -1.0
+                rand_angle *= sign
+                config2.vel = rl.Vector2Rotate(config2.vel, to_rad(rand_angle) + f32(i) * 30.0)
+                append(&enemy_spawn_effect.buf, spawn_particle(config2))
+            }
+        }
         if rl.IsKeyPressed(.I){
             reset_gravity_particles(&enemy_death_effect.buf)
         }
@@ -163,9 +178,12 @@ main :: proc(){
 
         //particle
         particle_inst_render(enemy_death_effect)
+        particle_inst_render(enemy_spawn_effect)
 
         //move outlines
         move_outline_render(player_mo)
+
+        //gui
         rl.DrawFPS(0, 0)
 
         rl.EndDrawing()
@@ -180,7 +198,8 @@ main :: proc(){
     //delete(command)
     delete(particles)
     delete(enemy_death_effect.buf)
-    //delete(gui_rects)
+    delete(enemy_spawn_effect.buf)
+    delete(gui_rects)
 
     rl.CloseWindow()
 

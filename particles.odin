@@ -8,8 +8,10 @@ import "core:math/rand"
 Particle :: struct{
     pos: rl.Vector2,
     starting_pos: rl.Vector2,
+
     vel: rl.Vector2,
     starting_vel: rl.Vector2,
+    modify_vel: bool,
 
     //gravity specific
     is_gravity: bool,
@@ -37,6 +39,25 @@ ParticleConfig :: struct{
     color: rl.Color,
     lifetime: f32,
     size: f32,
+    modify_vel: bool,
+}
+
+spawn_particle :: proc(config: ParticleConfig) -> Particle{
+    p := Particle{}
+    p.pos = config.pos
+    p.starting_pos = config.pos
+
+    p.vel = config.vel
+    p.starting_vel = config.vel
+    p.modify_vel = config.modify_vel
+
+    p.is_gravity = false
+    p.color = config.color
+    p.lifetime = config.lifetime
+    p.starting_lifetime = config.lifetime
+    p.size = config.size
+    p.starting_size = config.size
+    return p
 }
 
 spawn_particle_gravity :: proc(gravity_config: GravityParticleConfig, config: ParticleConfig) -> Particle{
@@ -123,6 +144,10 @@ particle_update :: proc(p: ^Particle, blocks: [dynamic]rl.Rectangle){
 
         //other properties
         age_ratio := p.lifetime / p.starting_lifetime
+        if !p.is_gravity && p.modify_vel{
+            p.vel = age_ratio * p.starting_vel
+        }
+
         p.size = age_ratio * p.starting_size
         p.color.a = u8(255.0 * age_ratio)
     }

@@ -7,7 +7,9 @@ import "core:math/rand"
 
 Particle :: struct{
     pos: rl.Vector2,
+    starting_pos: rl.Vector2,
     vel: rl.Vector2,
+    starting_vel: rl.Vector2,
 
     //gravity specific
     is_gravity: bool,
@@ -19,7 +21,6 @@ Particle :: struct{
 
     size: f32,
     starting_size: f32,
-    shape: ParticleShape,
 }
 
 GravityParticleConfig :: struct{
@@ -36,24 +37,18 @@ ParticleConfig :: struct{
     color: rl.Color,
     lifetime: f32,
     size: f32,
-    shape: ParticleShape,
-}
-
-ParticleShape :: enum{
-    Circle,
-    Square,
 }
 
 spawn_particle_gravity :: proc(gravity_config: GravityParticleConfig, config: ParticleConfig) -> Particle{
     p := Particle{}
     p.pos = config.pos
+    p.starting_pos = config.pos
     p.vel.x = config.vel.x
     p.color = config.color
     p.lifetime = config.lifetime
     p.starting_lifetime = config.lifetime
     p.size = config.size
     p.starting_size = config.size
-    p.shape = config.shape
 
     if gravity_config.dist_offset_jump > gravity_config.dist_offset.x || gravity_config.dist_offset_jump > gravity_config.dist_offset.x || gravity_config.vel_offset_jump > gravity_config.vel_offset{
         assert(false, "jump offset has to be smaller than the offset")
@@ -68,6 +63,7 @@ spawn_particle_gravity :: proc(gravity_config: GravityParticleConfig, config: Pa
     p.vel.y = get_ver_speed(dist, p.vel.x)
     p.g = get_gravity(dist, p.vel.x)
     p.is_gravity = true
+    p.starting_vel = p.vel
 
     return p
 }

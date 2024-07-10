@@ -82,7 +82,6 @@ main :: proc(){
     config.color = rl.RED 
     config.lifetime = 2.0
     config.size = 10.0
-    config.shape = .Circle
 
     g_config := GravityParticleConfig{}
     g_config.base_dist = {100.0, 50.0}
@@ -153,20 +152,28 @@ main :: proc(){
 
         particle_inst_render(enemy_death_effect)
 
-        rl.DrawCircleV({value2, Height / 2}, value, rl.ORANGE)
-
         if show_gui{
             uiid = 0
             gui_state.active_item = 0
             gui_state.hot_item = 0
             gui_rects_cursor := 0
 
-            gui_window(&gui_state, window_rect, "gui window")
+            gui_window(&gui_state, window_rect, "particle simulation")
 
-            if gui_button(&gui_state, gui_rects[gui_rects_cursor], "save"){
+            if gui_button(&gui_state, gui_rects[gui_rects_cursor], "reset"){
+                for i in 0..<len(enemy_death_effect.buf){
+                    enemy_death_effect.buf[i].pos = enemy_death_effect.buf[i].starting_pos
+                    enemy_death_effect.buf[i].lifetime = enemy_death_effect.buf[i].starting_lifetime
+                    enemy_death_effect.buf[i].size = enemy_death_effect.buf[i].starting_size
+                    enemy_death_effect.buf[i].vel = enemy_death_effect.buf[i].starting_vel
+                }
             }
             gui_rects_cursor += 1
-            if gui_button(&gui_state, gui_rects[gui_rects_cursor], "quit"){
+
+            if gui_button(&gui_state, gui_rects[gui_rects_cursor], "spawn 10"){
+                for i in 0..<10{
+                    append(&enemy_death_effect.buf, spawn_particle_gravity(g_config, config))
+                }
             }
             gui_rects_cursor += 1
 

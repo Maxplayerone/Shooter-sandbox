@@ -64,7 +64,8 @@ main :: proc(){
 
     window_rect := rl.Rectangle{50.0, 10.0, 300.0, 400.0}
     gui_state := GuiState{}
-    gui_rects := generate_rects_for_window(window_rect, 3)
+
+    gui_rects := generate_rects_for_window(window_rect, 4)
 
     show_gui := true 
 
@@ -202,7 +203,11 @@ main :: proc(){
         if show_gui{
             gui_window(&gui_state, window_rect, "gui window")
 
-            if gui_button(&gui_state, gui_rects[gui_rects_cursor], "hi"){
+            if gui_button(&gui_state, gui_rects[gui_rects_cursor], "save"){
+                fmt.println("bye")
+            }
+            gui_rects_cursor += 1
+            if gui_button(&gui_state, gui_rects[gui_rects_cursor], "quit"){
                 fmt.println("bye")
             }
             gui_rects_cursor += 1

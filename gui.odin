@@ -49,6 +49,21 @@ split_window_rect :: proc(rect: rl.Rectangle) -> (rl.Rectangle, rl.Rectangle, rl
     return rect1, rect2, rect3
 }
 
+/*
+split_rects :: proc(rects: ^[dynamic]rl.Rectangle, split_index: int){
+    original_rect := rects[split_index]
+    left_rect := original_rect
+    left_rect.width *= 0.5
+
+    right_rect := original_rect
+    right_rect.width *= 0.5
+    right_rect.x += original_rect.width * 0.5
+
+    rects[split_index] = left_rect
+    inject_at(&(rects^), split_index + 1, right_rect)
+}
+    */
+
 generate_rects_for_window :: proc(window_rect: rl.Rectangle, items_count: f32) -> [dynamic]rl.Rectangle{
     items: [dynamic]rl.Rectangle
     _, _, body_rect := split_window_rect(window_rect)

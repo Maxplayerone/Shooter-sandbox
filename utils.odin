@@ -3,6 +3,7 @@ package main
 import rl "vendor:raylib"
 
 import "core:math"
+import "core:math/rand"
 import "core:strings"
 
 get_rect :: proc(pos: rl.Vector2, size: f32) -> rl.Rectangle{
@@ -151,4 +152,35 @@ split_rect_by_two :: proc(rect: rl.Rectangle, left_width:f32 = 0.5, padding: f32
     right_rect.x += rect.width * left_width + padding
 
     return left_rect, right_rect
+}
+
+find_random_unoccupied_pos :: proc(blocks: [dynamic]rl.Rectangle, enemies: [dynamic]Enemy, player: Player) -> rl.Vector2{
+    colliding_with_smth := true
+    rand_pos: rl.Vector2
+
+    for colliding_with_smth{
+        colliding_with_smth = false
+
+        x := f32(rand.int31() % Width)
+        y := f32(rand.int31() % Height)
+        rand_pos = rl.Vector2{x, y}
+
+        for block in blocks{
+            if rl.CheckCollisionPointRec(rand_pos, block){
+                colliding_with_smth = true
+                continue
+            }
+        }
+        for enemy in enemies{
+            if rl.CheckCollisionPointRec(rand_pos, get_rect(enemy.pos, enemy.size)){
+                colliding_with_smth = true
+                continue
+            }
+        }
+        if rl.CheckCollisionPointRec(rand_pos, get_rect(player.pos, player.size)){
+                colliding_with_smth = true
+                continue
+        }
+    }
+    return rand_pos
 }

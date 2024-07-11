@@ -76,27 +76,20 @@ main :: proc(){
 
     particles: [dynamic]Particle
 
-    enemy_death_effect := ParticleInstancer{}
-    {
 
-        config := ParticleConfig{}
-        config.pos = rl.Vector2{700.0, 590.0}
-        config.vel = rl.Vector2{300.0, 0.0}
-        config.color = rl.RED 
-        config.lifetime = 2.0
-        config.size = 10.0
+    enemy_death_config := ParticleConfig{}
+    enemy_death_config.pos = rl.Vector2{700.0, 590.0}
+    enemy_death_config.vel = rl.Vector2{300.0, 0.0}
+    enemy_death_config.color = rl.RED 
+    enemy_death_config.lifetime = 2.0
+    enemy_death_config.size = 10.0
+    enemy_death_config.is_gravity = true
+    enemy_death_config.base_dist = {42.0, 50.0}
+    enemy_death_config.dist_offset = {45.0, 45.0}
+    enemy_death_config.dist_offset_jump = 13.0
+    enemy_death_config.vel_offset = 50.0
+    enemy_death_config.vel_offset_jump = 5.0
 
-        g_config := GravityParticleConfig{}
-        g_config.base_dist = {42.0, 50.0}
-        g_config.dist_offset = {45.0, 45.0}
-        g_config.dist_offset_jump = 13.0
-        g_config.vel_offset = 50.0
-        g_config.vel_offset_jump = 5.0
-
-        enemy_death_effect.config = config
-        enemy_death_effect.is_gravity = true
-        enemy_death_effect.gconfig = g_config
-    }
 
     enemy_spawn_config := ParticleConfig{}
     enemy_spawn_config.pos = {700.0, 590.0}
@@ -105,10 +98,6 @@ main :: proc(){
     enemy_spawn_config.color = rl.Color{255, 0, 0, 125}
     enemy_spawn_config.lifetime = 1.6
     enemy_spawn_config.size = 16.0
-
-    enable_enemy_spawn_effect: bool
-    enemy_spawn_effect_pos: rl.Vector2
-    enemy_spawn_effect_countdown := f32(1.0)
 
     emitter_buf: [dynamic]Emitter
 
@@ -128,33 +117,6 @@ main :: proc(){
             }
         }
 
-        /*
-        if len(enemies) < EnemiesMinLen{
-            if enable_enemy_spawn_effect{
-                enemy_spawn_effect_countdown -= rl.GetFrameTime()
-
-                if enemy_spawn_effect_countdown < 0.0{
-                    e := Enemy{
-                        pos = enemy_spawn_effect_pos,
-                        vel = EnemyVel,
-                        g = EnemyG,
-                        size = EnemySize,
-                        color = rl.RED
-                    }
-                    append(&enemies, e)
-
-                    enable_enemy_spawn_effect = false
-                    enemy_spawn_effect_countdown = 1.0
-                    }
-                }
-            else{
-                enable_enemy_spawn_effect = true
-                enemy_spawn_effect_pos = find_random_unoccupied_pos(blocks, enemies, player) 
-                instancer_add_instance(&enemy_spawn_effect, enemy_spawn_effect_pos)
-            }
-        }
-            */
-
         //enemies update
         for i in 0..<len(enemies){
             enemy_update(&enemies[i], blocks)
@@ -162,11 +124,12 @@ main :: proc(){
             //deleting enemies if colliding with bullets
             for j in 0..<len(bullets){
                 if rl.CheckCollisionCircleRec(bullets[j].pos, bullets[j].radius, get_rect(enemies[i].pos, enemies[i].size)){
-                    instancer_add_instance(&enemy_death_effect, enemies[i].pos)
+                    enemy_death_config.pos = enemies[i].pos
+                    append(&emitter_buf, emitter_create(enemy_death_config, enemy_death_config.lifetime, .DoNothing))
 
                     //enemy spawn particle emitter
                     enemy_spawn_config.pos = find_random_unoccupied_pos(blocks, enemies, player)
-                    append(&emitter_buf, emitter_create(enemy_spawn_config, {}, enemy_spawn_config.lifetime))
+                    append(&emitter_buf, emitter_create(enemy_spawn_config, enemy_spawn_config.lifetime * 0.6, .SpawnEnemy))
 
                     unordered_remove(&enemies, i)
                     unordered_remove(&bullets, j)
@@ -176,21 +139,24 @@ main :: proc(){
         }
 
         //particles update
-        particle_inst_update(&enemy_death_effect, blocks)
         for &emitter, i in emitter_buf{
-            if emitter_update(&emitter, blocks){
-                e := Enemy{
-                    pos = emitter.config.pos,
-                    vel = EnemyVel,
-                    g = EnemyG,
-                    size = EnemySize,
-                    color = rl.RED,
-                }
-                append(&enemies, e)
-                unordered_remove(&emitter_buf, i)
+            emitter_effect := emitter_update(&emitter, blocks)
+            switch emitter_effect{
+                case .DoNothingNoRemove: 
+                case .DoNothing:
+                    unordered_remove(&emitter_buf, i)
+                case .SpawnEnemy:
+                    e := Enemy{
+                        pos = emitter.config.pos,
+                        size = EnemySize,
+                        g = EnemyG,
+                        vel = EnemyVel,
+                        color = rl.RED,
+                    }
+                    append(&enemies, e)
+                    unordered_remove(&emitter_buf, i)
             }
         }
-        //particle_inst_update(&enemy_spawn_effect, blocks)
 
         //debug------------------------------------------------------
         if rl.IsKeyPressed(.O){
@@ -224,7 +190,6 @@ main :: proc(){
         }
 
         //particle
-        particle_inst_render(enemy_death_effect)
         for emitter in emitter_buf{
             emitter_render(emitter)
         }
@@ -247,7 +212,6 @@ main :: proc(){
     delete(enemies)
     //delete(command)
     delete(particles)
-    delete(enemy_death_effect.buf)
     delete(gui_rects)
     delete(emitter_buf)
 

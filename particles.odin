@@ -72,14 +72,6 @@ particle_render :: proc(p: Particle){
     }
 }
 
-GravityParticleConfig :: struct{
-    base_dist: rl.Vector2,
-    dist_offset: rl.Vector2,
-    dist_offset_jump: f32,
-    vel_offset: f32,
-    vel_offset_jump: f32,
-}
-
 ParticleConfig :: struct{
     pos: rl.Vector2,
     vel: rl.Vector2,
@@ -87,6 +79,13 @@ ParticleConfig :: struct{
     lifetime: f32,
     size: f32,
     modify_vel: bool,
+
+    is_gravity: bool,
+    base_dist: rl.Vector2,
+    dist_offset: rl.Vector2,
+    dist_offset_jump: f32,
+    vel_offset: f32,
+    vel_offset_jump: f32,
 }
 
 spawn_particle :: proc(config: ParticleConfig) -> Particle{
@@ -98,84 +97,84 @@ spawn_particle :: proc(config: ParticleConfig) -> Particle{
     p.starting_vel = config.vel
     p.modify_vel = config.modify_vel
 
-    p.is_gravity = false
-    p.color = config.color
-    p.lifetime = config.lifetime
-    p.starting_lifetime = config.lifetime
-    p.size = config.size
-    p.starting_size = config.size
-    return p
-}
-
-spawn_particle_gravity :: proc(gravity_config: GravityParticleConfig, config: ParticleConfig) -> Particle{
-    p := Particle{}
-    p.pos = config.pos
-    p.starting_pos = config.pos
-    p.vel.x = config.vel.x
     p.color = config.color
     p.lifetime = config.lifetime
     p.starting_lifetime = config.lifetime
     p.size = config.size
     p.starting_size = config.size
 
-    if gravity_config.dist_offset_jump > gravity_config.dist_offset.x || gravity_config.dist_offset_jump > gravity_config.dist_offset.x || gravity_config.vel_offset_jump > gravity_config.vel_offset{
-        assert(false, "jump offset has to be smaller than the offset")
+    p.is_gravity = config.is_gravity 
+    if config.is_gravity{
+        if config.dist_offset_jump > config.dist_offset.x || config.dist_offset_jump > config.dist_offset.x || config.vel_offset_jump > config.vel_offset{
+            assert(false, "jump offset has to be smaller than the offset")
+        }
+
+        dist := rl.Vector2{}
+        sign: f32 = rand.int31() % 2 == 0 ? 1.0 : -1.0
+        dist.x = f32(rand.int31() % i32(config.dist_offset.x / config.dist_offset_jump)) * config.dist_offset_jump * sign + config.base_dist.x
+        dist.y = f32(rand.int31() % i32(config.dist_offset.y / config.dist_offset_jump)) * config.dist_offset_jump * sign + config.base_dist.y
+
+        p.vel.x =  sign * (f32(rand.int31() % i32(config.vel_offset / config.vel_offset_jump)) * config.vel_offset_jump + config.vel.x)
+        p.vel.y = get_ver_speed(dist, p.vel.x)
+        p.g = get_gravity(dist, p.vel.x)
+        p.is_gravity = true
+        p.starting_vel = p.vel
     }
-
-    dist := rl.Vector2{}
-    sign: f32 = rand.int31() % 2 == 0 ? 1.0 : -1.0
-    dist.x = f32(rand.int31() % i32(gravity_config.dist_offset.x / gravity_config.dist_offset_jump)) * gravity_config.dist_offset_jump * sign + gravity_config.base_dist.x
-    dist.y = f32(rand.int31() % i32(gravity_config.dist_offset.y / gravity_config.dist_offset_jump)) * gravity_config.dist_offset_jump * sign + gravity_config.base_dist.y
-
-    p.vel.x =  sign * (f32(rand.int31() % i32(gravity_config.vel_offset / gravity_config.vel_offset_jump)) * gravity_config.vel_offset_jump + config.vel.x)
-    p.vel.y = get_ver_speed(dist, p.vel.x)
-    p.g = get_gravity(dist, p.vel.x)
-    p.is_gravity = true
-    p.starting_vel = p.vel
 
     return p
 }
 
 reset_particles :: proc(particles: ^[dynamic]Particle){
      for i in 0..<len(particles){
-        particles[i].pos = particles[i].starting_pos
-        particles[i].lifetime = particles[i].starting_lifetime
-        particles[i].size = particles[i].starting_size
-        particles[i].vel = particles[i].starting_vel
+        particle_reset(&particles[i])
     }
 }
 
 InstanceSize :: 10
 
+EmitterEffect :: enum{
+    DoNothingNoRemove,
+    DoNothing,
+    SpawnEnemy,
+}
+
 //for now only works for non-gravity particles
 Emitter :: struct{
     buf: [InstanceSize]Particle,
     config: ParticleConfig,
-    is_gravity: bool,
-    gconfig: GravityParticleConfig,
+
     emittion_time: f32,
+    effect: EmitterEffect,
 }
 
-emitter_create :: proc(config: ParticleConfig, gconfig: GravityParticleConfig, emission_time: f32) -> Emitter{
+emitter_create :: proc(config: ParticleConfig, emission_time: f32, effect: EmitterEffect) -> Emitter{
     emitter: Emitter
     emitter.config = config
-    if gconfig.base_dist.x != 0{
-        emitter.gconfig = gconfig
-    }
     emitter.emittion_time = emission_time
+    emitter.effect = effect
 
-    for i in 0..<InstanceSize{
-        rand_angle := f32(rand.int31() % 45)
-        sign: f32 = rand.int31()  % 2 == 0 ? 1.0 : -1.0
-        rand_angle *= sign
-        emitter.config.vel = rl.Vector2Rotate(emitter.config.vel, to_rad(rand_angle) + f32(i) * 30.0)
-        emitter.buf[i] = spawn_particle(emitter.config)
+    if config.is_gravity{
+        for i in 0..<InstanceSize{
+            emitter.buf[i] = spawn_particle(config)
+        }
     }
+    else{
+        //maybe customize that in the future?
+        for i in 0..<InstanceSize{
+            rand_angle := f32(rand.int31() % 45)
+            sign: f32 = rand.int31()  % 2 == 0 ? 1.0 : -1.0
+            rand_angle *= sign
+            emitter.config.vel = rl.Vector2Rotate(emitter.config.vel, to_rad(rand_angle) + f32(i) * 30.0)
+            emitter.buf[i] = spawn_particle(emitter.config)
+        }
+    }
+
+
     return emitter
 }
 
 //returns true if the emitter finished emitting
-emitter_update :: proc(emitter: ^Emitter, blocks: [dynamic]rl.Rectangle) -> bool{
+emitter_update :: proc(emitter: ^Emitter, blocks: [dynamic]rl.Rectangle) -> EmitterEffect{
     for i in 0..<InstanceSize{
         particle_update(&emitter.buf[i], blocks)
 
@@ -185,53 +184,14 @@ emitter_update :: proc(emitter: ^Emitter, blocks: [dynamic]rl.Rectangle) -> bool
     }
 
     emitter.emittion_time -= rl.GetFrameTime()
-    return emitter.emittion_time < 0.0
+    if emitter.emittion_time < 0.0{
+        return emitter.effect
+    }
+    return .DoNothingNoRemove
 }
 
 emitter_render :: proc(emitter: Emitter){
     for particle in emitter.buf{
         particle_render(particle)
-    }
-}
-
-ParticleInstancer :: struct{
-    buf: [dynamic]Particle,
-
-    config: ParticleConfig,
-    is_gravity: bool,
-    gconfig: GravityParticleConfig,
-}
-
-instancer_add_instance :: proc(instancer: ^ParticleInstancer, pos: rl.Vector2){
-    instancer.config.pos = pos
-    if instancer.is_gravity{
-        for i in 0..<InstanceSize{
-            append(&instancer.buf, spawn_particle_gravity(instancer.gconfig, instancer.config))
-        }
-    }
-    else{
-        for i in 0..<InstanceSize{ 
-            rand_angle := f32(rand.int31() % 45)
-            sign: f32 = rand.int31()  % 2 == 0 ? 1.0 : -1.0
-            rand_angle *= sign
-            instancer.config.vel = rl.Vector2Rotate(instancer.config.vel, to_rad(rand_angle) + f32(i) * 30.0)
-            append(&instancer.buf, spawn_particle(instancer.config))
-        }
-    }
-}
-
-particle_inst_update :: proc(pi: ^ParticleInstancer, blocks: [dynamic]rl.Rectangle){
-    for &p, i in pi.buf{
-        particle_update(&p, blocks)
-
-        if p.lifetime <= 0{
-            unordered_remove(&pi.buf, i)
-        }
-    }
-}
-
-particle_inst_render :: proc(pi: ParticleInstancer){
-    for p in pi.buf{
-        particle_render(p)
     }
 }

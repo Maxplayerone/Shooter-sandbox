@@ -102,6 +102,9 @@ main :: proc(){
     p := spawn_particle(config2)
 
     enemy_spawn_effect := ParticleInstancer{}
+    enable_enemy_spawn_effect: bool
+    enemy_spawn_effect_pos: rl.Vector2
+    enemy_spawn_effect_countdown := f32(1.0)
 
     for !rl.WindowShouldClose(){
 
@@ -120,42 +123,66 @@ main :: proc(){
         }
 
         if len(enemies) < EnemiesMinLen{
-            colliding_with_smth := true
-            enemy_pos: rl.Vector2
-
-            for colliding_with_smth{
-                colliding_with_smth = false
-
-                x := f32(rand.int31() % Width)
-                y := f32(rand.int31() % Height)
-                enemy_pos = rl.Vector2{x, y}
-
-                for block in blocks{
-                    if rl.CheckCollisionPointRec(enemy_pos, block){
-                        colliding_with_smth = true
-                        continue
+            if enable_enemy_spawn_effect{
+                if enemy_spawn_effect_countdown == 1.0{
+                    config2.pos = enemy_spawn_effect_pos
+                    for i in 0..<10{ 
+                        rand_angle := f32(rand.int31() % 45)
+                        sign: f32 = rand.int31()  % 2 == 0 ? 1.0 : -1.0
+                        rand_angle *= sign
+                        config2.vel = rl.Vector2Rotate(config2.vel, to_rad(rand_angle) + f32(i) * 30.0)
+                        append(&enemy_spawn_effect.buf, spawn_particle(config2))
                     }
                 }
-                for enemy in enemies{
-                    if rl.CheckCollisionPointRec(enemy_pos, get_rect(enemy.pos, enemy.size)){
-                        colliding_with_smth = true
-                        continue
+
+                enemy_spawn_effect_countdown -= rl.GetFrameTime()
+
+                if enemy_spawn_effect_countdown < 0.0{
+                    e := Enemy{
+                        pos = enemy_spawn_effect_pos,
+                        vel = EnemyVel,
+                        g = EnemyG,
+                        size = EnemySize,
+                        color = rl.RED
+                    }
+                    append(&enemies, e)
+
+                    enable_enemy_spawn_effect = false
+                    enemy_spawn_effect_countdown = 1.0
                     }
                 }
-                if rl.CheckCollisionPointRec(enemy_pos, get_rect(player.pos, player.size)){
-                        colliding_with_smth = true
-                        continue
-                }
-            }
+            else{
+                colliding_with_smth := true
+                enemy_pos: rl.Vector2
 
-            e := Enemy{
-                pos = enemy_pos,
-                size = EnemySize,
-                color = rl.RED,
-                vel = EnemyVel,
-                g = EnemyG,
+                for colliding_with_smth{
+                    colliding_with_smth = false
+
+                    x := f32(rand.int31() % Width)
+                    y := f32(rand.int31() % Height)
+                    enemy_pos = rl.Vector2{x, y}
+
+                    for block in blocks{
+                        if rl.CheckCollisionPointRec(enemy_pos, block){
+                            colliding_with_smth = true
+                            continue
+                        }
+                    }
+                    for enemy in enemies{
+                        if rl.CheckCollisionPointRec(enemy_pos, get_rect(enemy.pos, enemy.size)){
+                            colliding_with_smth = true
+                            continue
+                        }
+                    }
+                    if rl.CheckCollisionPointRec(enemy_pos, get_rect(player.pos, player.size)){
+                            colliding_with_smth = true
+                            continue
+                    }
+                }
+
+                enable_enemy_spawn_effect = true
+                enemy_spawn_effect_pos = enemy_pos
             }
-            append(&enemies, e)
         }
 
         //enemies update

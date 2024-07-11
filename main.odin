@@ -119,7 +119,7 @@ main :: proc(){
 
         //enemies update
         for i in 0..<len(enemies){
-            enemy_update(&enemies[i], blocks)
+            enemy_update(&enemies[i], blocks, player.pos)
 
             //deleting enemies if colliding with bullets
             for j in 0..<len(bullets){

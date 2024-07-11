@@ -120,10 +120,36 @@ main :: proc(){
         }
 
         if len(enemies) < EnemiesMinLen{
-            x := f32(rand.int31() % Width)
-            y := f32(rand.int31() % Height)
+            colliding_with_smth := true
+            enemy_pos: rl.Vector2
+
+            for colliding_with_smth{
+                colliding_with_smth = false
+
+                x := f32(rand.int31() % Width)
+                y := f32(rand.int31() % Height)
+                enemy_pos = rl.Vector2{x, y}
+
+                for block in blocks{
+                    if rl.CheckCollisionPointRec(enemy_pos, block){
+                        colliding_with_smth = true
+                        continue
+                    }
+                }
+                for enemy in enemies{
+                    if rl.CheckCollisionPointRec(enemy_pos, get_rect(enemy.pos, enemy.size)){
+                        colliding_with_smth = true
+                        continue
+                    }
+                }
+                if rl.CheckCollisionPointRec(enemy_pos, get_rect(player.pos, player.size)){
+                        colliding_with_smth = true
+                        continue
+                }
+            }
+
             e := Enemy{
-                pos = rl.Vector2{x, y},
+                pos = enemy_pos,
                 size = EnemySize,
                 color = rl.RED,
                 vel = EnemyVel,

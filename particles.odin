@@ -89,8 +89,7 @@ spawn_particle_gravity :: proc(gravity_config: GravityParticleConfig, config: Pa
     return p
 }
 
-//may also be for normal particles but I'm not sure
-reset_gravity_particles :: proc(particles: ^[dynamic]Particle){
+reset_particles :: proc(particles: ^[dynamic]Particle){
      for i in 0..<len(particles){
         particles[i].pos = particles[i].starting_pos
         particles[i].lifetime = particles[i].starting_lifetime
@@ -99,8 +98,31 @@ reset_gravity_particles :: proc(particles: ^[dynamic]Particle){
     }
 }
 
+InstanceSize :: 10
 ParticleInstancer :: struct{
     buf: [dynamic]Particle,
+
+    config: ParticleConfig,
+    is_gravity: bool,
+    gconfig: GravityParticleConfig,
+}
+
+instancer_add_instance :: proc(instancer: ^ParticleInstancer, pos: rl.Vector2){
+    instancer.config.pos = pos
+    if instancer.is_gravity{
+        for i in 0..<InstanceSize{
+            append(&instancer.buf, spawn_particle_gravity(instancer.gconfig, instancer.config))
+        }
+    }
+    else{
+        for i in 0..<InstanceSize{ 
+            rand_angle := f32(rand.int31() % 45)
+            sign: f32 = rand.int31()  % 2 == 0 ? 1.0 : -1.0
+            rand_angle *= sign
+            instancer.config.vel = rl.Vector2Rotate(instancer.config.vel, to_rad(rand_angle) + f32(i) * 30.0)
+            append(&instancer.buf, spawn_particle(instancer.config))
+        }
+    }
 }
 
 particle_inst_update :: proc(pi: ^ParticleInstancer, blocks: [dynamic]rl.Rectangle){

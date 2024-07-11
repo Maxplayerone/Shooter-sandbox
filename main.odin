@@ -76,32 +76,42 @@ main :: proc(){
 
     particles: [dynamic]Particle
 
-    config := ParticleConfig{}
-    config.pos = rl.Vector2{700.0, 590.0}
-    config.vel = rl.Vector2{300.0, 0.0}
-    config.color = rl.RED 
-    config.lifetime = 2.0
-    config.size = 10.0
-
-    g_config := GravityParticleConfig{}
-    g_config.base_dist = {42.0, 50.0}
-    g_config.dist_offset = {45.0, 45.0}
-    g_config.dist_offset_jump = 13.0
-    g_config.vel_offset = 50.0
-    g_config.vel_offset_jump = 5.0
-
     enemy_death_effect := ParticleInstancer{}
+    {
 
-    config2 := ParticleConfig{}
-    config2.pos = {700.0, 590.0}
-    config2.vel = {50.0, 0.0}
-    config2.color = rl.Color{255, 0, 0, 125}
-    config2.lifetime = 1.6
-    config2.size = 16.0
-    config2.modify_vel = true
-    p := spawn_particle(config2)
+        config := ParticleConfig{}
+        config.pos = rl.Vector2{700.0, 590.0}
+        config.vel = rl.Vector2{300.0, 0.0}
+        config.color = rl.RED 
+        config.lifetime = 2.0
+        config.size = 10.0
+
+        g_config := GravityParticleConfig{}
+        g_config.base_dist = {42.0, 50.0}
+        g_config.dist_offset = {45.0, 45.0}
+        g_config.dist_offset_jump = 13.0
+        g_config.vel_offset = 50.0
+        g_config.vel_offset_jump = 5.0
+
+        enemy_death_effect.config = config
+        enemy_death_effect.is_gravity = true
+        enemy_death_effect.gconfig = g_config
+    }
 
     enemy_spawn_effect := ParticleInstancer{}
+    {
+        config := ParticleConfig{}
+        config.pos = {700.0, 590.0}
+        config.vel = {50.0, 0.0}
+        config.color = rl.Color{255, 0, 0, 125}
+        config.lifetime = 1.6
+        config.size = 16.0
+        config.modify_vel = true
+
+        enemy_spawn_effect.config = config
+    }
+
+
     enable_enemy_spawn_effect: bool
     enemy_spawn_effect_pos: rl.Vector2
     enemy_spawn_effect_countdown := f32(1.0)
@@ -125,14 +135,7 @@ main :: proc(){
         if len(enemies) < EnemiesMinLen{
             if enable_enemy_spawn_effect{
                 if enemy_spawn_effect_countdown == 1.0{
-                    config2.pos = enemy_spawn_effect_pos
-                    for i in 0..<10{ 
-                        rand_angle := f32(rand.int31() % 45)
-                        sign: f32 = rand.int31()  % 2 == 0 ? 1.0 : -1.0
-                        rand_angle *= sign
-                        config2.vel = rl.Vector2Rotate(config2.vel, to_rad(rand_angle) + f32(i) * 30.0)
-                        append(&enemy_spawn_effect.buf, spawn_particle(config2))
-                    }
+                    instancer_add_instance(&enemy_spawn_effect, enemy_spawn_effect_pos)
                 }
 
                 enemy_spawn_effect_countdown -= rl.GetFrameTime()
@@ -192,11 +195,7 @@ main :: proc(){
             //deleting enemies if colliding with bullets
             for j in 0..<len(bullets){
                 if rl.CheckCollisionCircleRec(bullets[j].pos, bullets[j].radius, get_rect(enemies[i].pos, enemies[i].size)){
-
-                    config.pos = enemies[i].pos
-                    for i in 0..<10{
-                        append(&enemy_death_effect.buf, spawn_particle_gravity(g_config, config))
-                    }
+                    instancer_add_instance(&enemy_death_effect, enemies[i].pos)
                     //spawn particles
                     unordered_remove(&enemies, i)
                     unordered_remove(&bullets, j)
@@ -210,18 +209,6 @@ main :: proc(){
         particle_inst_update(&enemy_spawn_effect, blocks)
 
         //debug------------------------------------------------------
-        if rl.IsKeyPressed(.U){
-            for i in 0..<10{ 
-                rand_angle := f32(rand.int31() % 45)
-                sign: f32 = rand.int31()  % 2 == 0 ? 1.0 : -1.0
-                rand_angle *= sign
-                config2.vel = rl.Vector2Rotate(config2.vel, to_rad(rand_angle) + f32(i) * 30.0)
-                append(&enemy_spawn_effect.buf, spawn_particle(config2))
-            }
-        }
-        if rl.IsKeyPressed(.I){
-            reset_gravity_particles(&enemy_death_effect.buf)
-        }
         if rl.IsKeyPressed(.O){
             player_mo.only_draw_last_segment = !player_mo.only_draw_last_segment
         }

@@ -41,23 +41,30 @@ main :: proc(){
 
     blocks: [dynamic]rl.Rectangle
     append(&blocks, rl.Rectangle{0.0, Height - 100.0 + player.size, Width, 100.0})
-    //append(&blocks, rl.Rectangle{200.0, 400.0, 100.0, 300.0})
     append(&blocks, rl.Rectangle{700.0, 300.0, 150.0, 50.0})
 
+    EnemySize :: 40
+    EnemiesMinLen :: 3
+    EnemyVel := rl.Vector2{player.speed.x, 0.0}
+    EnemyG := get_gravity({jump_dist, jump_height}, player.speed.x)
     enemies: [dynamic]Enemy
     {
         enemy := Enemy{
             pos = rl.Vector2{200.0, Height - 100.0},
-            size = 40.0,
+            size = EnemySize,
             color = rl.RED,
+            vel = EnemyVel,
+            g = EnemyG,
         }
         append(&enemies, enemy)
     }
     {
         enemy := Enemy{
             pos = rl.Vector2{300.0, Height - 100.0},
-            size = 40.0,
+            size = EnemySize,
             color = rl.RED,
+            vel = EnemyVel,
+            g = EnemyG,
         }
         append(&enemies, enemy)
     }
@@ -112,8 +119,24 @@ main :: proc(){
             }
         }
 
+        if len(enemies) < EnemiesMinLen{
+            x := f32(rand.int31() % Width)
+            y := f32(rand.int31() % Height)
+            e := Enemy{
+                pos = rl.Vector2{x, y},
+                size = EnemySize,
+                color = rl.RED,
+                vel = EnemyVel,
+                g = EnemyG,
+            }
+            append(&enemies, e)
+        }
+
         //enemies update
         for i in 0..<len(enemies){
+            enemy_update(&enemies[i], blocks)
+
+            //deleting enemies if colliding with bullets
             for j in 0..<len(bullets){
                 if rl.CheckCollisionCircleRec(bullets[j].pos, bullets[j].radius, get_rect(enemies[i].pos, enemies[i].size)){
 

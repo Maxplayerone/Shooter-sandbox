@@ -10,7 +10,7 @@ EnemySize :: 40
 @(private="file")
 EnemyVel := rl.Vector2{400.0, 0.0}
 @(private="file")
-EnemyG := get_gravity({150.0, 200.0}, 400.0)
+EnemyG := get_gravity({150.0, 200.0}, EnemyVel.x)
 @(private="file")
 EnemyColor :: rl.RED
 @(private="file")
@@ -32,8 +32,12 @@ EnemyMovingDefault :: EnemyMoving{
     min_dist_to_player = 150.0,
 }
 
-EnemyJumping :: struct{}
-EnemyJumpingDefault :: EnemyJumping{}
+EnemyJumping :: struct{
+    jump_frames_before_floor_check: int
+}
+EnemyJumpingDefault :: EnemyJumping{
+    jump_frames_before_floor_check = 5,
+}
 
 EnemyState :: union{
     EnemyIdle,
@@ -78,6 +82,8 @@ enemy_update :: proc(e: ^Enemy, blocks: [dynamic]rl.Rectangle, player_pos: rl.Ve
     dt := rl.GetFrameTime()
 
     //(NOTE) the state in cur_state isn't saved
+    //for EnemyJumping state
+    is_jumping := false
     switch &s in e.cur_state{
         case EnemyIdle:
             e.time_btw_states -= dt
@@ -87,12 +93,21 @@ enemy_update :: proc(e: ^Enemy, blocks: [dynamic]rl.Rectangle, player_pos: rl.Ve
                 e.time_btw_states = StartTimeBtwStates
             }
         case EnemyJumping:
-            e.time_btw_states -= dt
-            if e.time_btw_states < 0.0{
-                idx := rand.int31() % (len(EnemyStates) -1) + 1
-                e.cur_state = EnemyStates[idx]
-                e.time_btw_states = StartTimeBtwStates
+            if s.jump_frames_before_floor_check == 5{
+                e.vel.y = get_ver_speed({150.0, 200.0}, EnemyVel.x)
+                is_jumping = true
             }
+
+            if s.jump_frames_before_floor_check > 0{
+                e.pos.y -= 0.5 * e.g * dt * dt + e.vel.y * dt
+                e.vel.y += e.g * dt
+            }
+            else{
+                idx := rand.int31() % len(EnemyStates)
+                e.cur_state = EnemyStates[idx]
+            }
+
+            s.jump_frames_before_floor_check -= 1
         case EnemyMoving:
             dist_to_player := player_pos.x - e.pos.x
             sign := dist_to_player > 0.0 ? 1.0 : -1.0
@@ -118,10 +133,9 @@ enemy_update :: proc(e: ^Enemy, blocks: [dynamic]rl.Rectangle, player_pos: rl.Ve
             }
     }
 
-
     fmt.println("enemy is in ", e.cur_state, " state")
 
-    if is_colliding, floor_y := floor_collission(blocks, {e.pos.x, e.pos.y + e.size + 1.0}, e.size); is_colliding{
+    if is_colliding, floor_y := floor_collission(blocks, {e.pos.x, e.pos.y + e.size + 1.0}, e.size); is_colliding && !is_jumping{
         e.pos.y = floor_y - e.size
         e.vel.y = 0 //we are treating every surface like it's elevated
     }

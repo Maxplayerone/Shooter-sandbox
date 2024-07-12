@@ -98,6 +98,7 @@ player_update :: proc(p: ^Player, mo: ^MoveOutline, bullets: ^[dynamic]Bullet, b
         bullet.color = rl.WHITE
         bullet.dir = vec_norm(dx, dy)
         bullet.speed = 1200.0
+        bullet.owner = .Player
         append(bullets, bullet)
     }
 }

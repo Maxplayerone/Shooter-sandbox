@@ -19,8 +19,17 @@ StartTimeBtwStates :: 1.0
 EnemyIdle :: struct{}
 EnemyIdleDefault :: EnemyIdle{}
 
-EnemyShooting :: struct{}
-EnemyShootingDefault :: EnemyShooting{}
+EnemyShooting :: struct{
+    reload_time: f32,
+    cur_time: f32,
+    shots_fired: int,
+    max_shots_fired: int,
+}
+EnemyShootingDefault :: EnemyShooting{
+    reload_time = 1.0,
+    cur_time = 1.0,
+    max_shots_fired = 3,
+}
 
 EnemyMoving :: struct{
     max_move_dist: f32,
@@ -78,7 +87,7 @@ enemy_spawn :: proc(pos: rl.Vector2) -> Enemy{
     }
 }
 
-enemy_update :: proc(e: ^Enemy, blocks: [dynamic]rl.Rectangle, player_pos: rl.Vector2){
+enemy_update :: proc(e: ^Enemy, blocks: [dynamic]rl.Rectangle, player_pos: rl.Vector2, bullets: ^[dynamic]Bullet){
     dt := rl.GetFrameTime()
 
     //(NOTE) the state in cur_state isn't saved
@@ -103,8 +112,9 @@ enemy_update :: proc(e: ^Enemy, blocks: [dynamic]rl.Rectangle, player_pos: rl.Ve
                 e.vel.y += e.g * dt
             }
             else{
-                idx := rand.int31() % len(EnemyStates)
-                e.cur_state = EnemyStates[idx]
+                //idx := rand.int31() % len(EnemyStates)
+                //e.cur_state = EnemyStates[idx]
+                e.cur_state = EnemyStates[0]
             }
 
             s.jump_frames_before_floor_check -= 1
@@ -114,26 +124,41 @@ enemy_update :: proc(e: ^Enemy, blocks: [dynamic]rl.Rectangle, player_pos: rl.Ve
             e.pos.x += e.vel.x * dt * f32(sign)
 
             if abs(player_pos.x - e.pos.x) < s.min_dist_to_player{
-                idx := rand.int31() % len(EnemyStates)
-                e.cur_state = EnemyStates[idx]
+                //idx := rand.int31() % len(EnemyStates)
+                //e.cur_state = EnemyStates[idx]
+                e.cur_state = EnemyStates[0]
             }
 
             s.move_dist += e.vel.x * dt * f32(sign)
 
             if abs(s.move_dist) > s.max_move_dist{
-                idx := rand.int31() % len(EnemyStates)
-                e.cur_state = EnemyStates[idx]
+                //idx := rand.int31() % len(EnemyStates)
+                //e.cur_state = EnemyStates[idx]
+                e.cur_state = EnemyStates[0]
             }
         case EnemyShooting:
-            e.time_btw_states -= dt
-            if e.time_btw_states < 0.0{
-                idx := rand.int31() % (len(EnemyStates) -1) + 1
-                e.cur_state = EnemyStates[idx]
-                e.time_btw_states = StartTimeBtwStates
+            s.cur_time += dt
+            if s.cur_time >= s.reload_time{
+                bullet := Bullet{
+                    pos = get_center(e.pos, e.size),
+                    radius = 8.0,
+                    color = rl.WHITE,
+                    dir = vec_norm(e.dir.x, e.dir.y),
+                    speed = 1200.0,
+                    owner = .Enemy,
+                }
+                append(bullets, bullet)
+
+                s.cur_time = 0.0
+                s.shots_fired += 1
+            }
+
+            //idx := rand.int31() % (len(EnemyStates) -1) + 1
+            //e.cur_state = EnemyStates[idx]
+            if s.shots_fired >= s.max_shots_fired{
+                e.cur_state = EnemyStates[0]
             }
     }
-
-    fmt.println("enemy is in ", e.cur_state, " state")
 
     if is_colliding, floor_y := floor_collission(blocks, {e.pos.x, e.pos.y + e.size + 1.0}, e.size); is_colliding && !is_jumping{
         e.pos.y = floor_y - e.size
@@ -149,6 +174,5 @@ enemy_update :: proc(e: ^Enemy, blocks: [dynamic]rl.Rectangle, player_pos: rl.Ve
 
 enemy_render :: proc(e: Enemy){
     rl.DrawRectangleV(e.pos, {e.size, e.size}, e.color)
-    enemy_mid := rl.Vector2{e.pos.x + e.size / 2, e.pos.y + e.size / 2}
-    rl.DrawLineEx(enemy_mid, enemy_mid + e.dir, 5.0, rl.ORANGE)
+    rl.DrawLineEx(get_center(e.pos, e.size), get_center(e.pos, e.size) + e.dir, 5.0, rl.ORANGE)
 }

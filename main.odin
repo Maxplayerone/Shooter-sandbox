@@ -82,16 +82,20 @@ main :: proc(){
                     unordered_remove(&bullets, i)
                     break
                 }
+
+                if bullets[i].owner == .Enemy && rl.CheckCollisionPointRec(bullets[i].pos, get_rect(player.pos, player.size)){
+                    fmt.println("you ded")
+                }
             }
         }
 
         //enemies update
         for i in 0..<len(enemies){
-            enemy_update(&enemies[i], blocks, player.pos)
+            enemy_update(&enemies[i], blocks, player.pos, &bullets)
 
             //deleting enemies if colliding with bullets
             for j in 0..<len(bullets){
-                if rl.CheckCollisionCircleRec(bullets[j].pos, bullets[j].radius, get_rect(enemies[i].pos, enemies[i].size)){
+                if bullets[i].owner == .Player && rl.CheckCollisionCircleRec(bullets[j].pos, bullets[j].radius, get_rect(enemies[i].pos, enemies[i].size)){
                     enemy_death_config.pos = enemies[i].pos
                     append(&emitter_buf, emitter_create(enemy_death_config, enemy_death_config.lifetime, .DoNothing))
 

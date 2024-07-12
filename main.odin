@@ -36,6 +36,9 @@ main :: proc(){
     blocks: [dynamic]rl.Rectangle
     append(&blocks, rl.Rectangle{0.0, Height - 100.0 + player.size, Width, 100.0})
     append(&blocks, rl.Rectangle{700.0, 300.0, 150.0, 50.0})
+    append(&blocks, rl.Rectangle{-10.0, 0.0, 0.0, Height})
+    append(&blocks, rl.Rectangle{Width, 0.0, Width + 10.0, Height})
+    append(&blocks, rl.Rectangle{0.0, -10.0, Width, 0.0})
 
     enemies: [dynamic]Enemy
     append(&enemies, enemy_spawn({200.0, Height - 100.0}))
@@ -74,6 +77,9 @@ main :: proc(){
         //player update
         player_update(&player, &player_mo, &bullets, blocks, gui_state)
 
+        if rl.IsKeyPressed(.Q){
+            fmt.println("pause game")
+        }
         //bullets update
         for i in 0..<len(bullets){
             bullet_update(&bullets[i])
@@ -95,7 +101,8 @@ main :: proc(){
 
             //deleting enemies if colliding with bullets
             for j in 0..<len(bullets){
-                if bullets[i].owner == .Player && rl.CheckCollisionCircleRec(bullets[j].pos, bullets[j].radius, get_rect(enemies[i].pos, enemies[i].size)){
+
+                if bullets[j].owner == .Player && rl.CheckCollisionCircleRec(bullets[j].pos, bullets[j].radius, get_rect(enemies[i].pos, enemies[i].size)){
                     enemy_death_config.pos = enemies[i].pos
                     append(&emitter_buf, emitter_create(enemy_death_config, enemy_death_config.lifetime, .DoNothing))
 

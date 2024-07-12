@@ -1,14 +1,8 @@
 # THE GAME
-The game is inspired by Dani's first ludum dare entry (game called Fair 'n square). My game howered puts
-more emphasis on giving the user a lot more control. The user can access a console window, which gives
-him an ability to change the game for example inreasing enemy spawn rate or changing player's color
+The game is inspired by Dani's first ludum dare entry (game called Fair 'n square). My game howered puts more emphasis on turn-based gameplay
 ![Screenshoot from the game](res/game_screenshots/screenshoot1.PNG)
 
 # DEVELOPMENT ROADMAP
-## ADD THE CONSOLE
-- writing to a console
--checking if the commands exists
--setting command to certain values
 ## WEAPONS
 - laser
 - shotgun

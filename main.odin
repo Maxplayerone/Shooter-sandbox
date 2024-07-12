@@ -41,8 +41,11 @@ main :: proc(){
     append(&blocks, rl.Rectangle{0.0, -10.0, Width, 0.0})
 
     enemies: [dynamic]Enemy
-    append(&enemies, enemy_spawn({200.0, Height - 100.0}))
-    //append(&enemies, enemy_spawn({300.0, Height - 100.0}))
+    enemy_y := Height - 100.0
+    
+    for i in 0..<3{
+        append(&enemies, enemy_spawn(find_random_unoccupied_pos_one_coordinate(blocks, enemies, player, Height - 100.0)))
+    }
 
     gui_state := GuiState{}
     window_rect := rl.Rectangle{11, 10, 427, 621}
@@ -116,7 +119,7 @@ main :: proc(){
                     append(&emitter_buf, emitter_create(enemy_death_config, enemy_death_config.lifetime, .DoNothing))
 
                     //enemy spawn particle emitter
-                    enemy_spawn_config.pos = find_random_unoccupied_pos(blocks, enemies, player)
+                    enemy_spawn_config.pos = find_random_unoccupied_pos_one_coordinate(blocks, enemies, player, Height - 100.0)
                     append(&emitter_buf, emitter_create(enemy_spawn_config, enemy_spawn_config.lifetime * 0.6, .SpawnEnemy))
 
                     unordered_remove(&enemies, i)

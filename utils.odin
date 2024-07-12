@@ -154,8 +154,7 @@ split_rect_by_two :: proc(rect: rl.Rectangle, left_width:f32 = 0.5, padding: f32
     return left_rect, right_rect
 }
 
-find_random_unoccupied_pos :: proc(blocks: [dynamic]rl.Rectangle, enemies: [dynamic]Enemy, player: Player) -> rl.Vector2{
-    colliding_with_smth := true
+find_random_unoccupied_pos :: proc(blocks: [dynamic]rl.Rectangle, enemies: [dynamic]Enemy, player: Player) -> rl.Vector2{ colliding_with_smth := true
     rand_pos: rl.Vector2
 
     for colliding_with_smth{
@@ -163,6 +162,35 @@ find_random_unoccupied_pos :: proc(blocks: [dynamic]rl.Rectangle, enemies: [dyna
 
         x := f32(rand.int31() % Width)
         y := f32(rand.int31() % Height)
+        rand_pos = rl.Vector2{x, y}
+
+        for block in blocks{
+            if rl.CheckCollisionPointRec(rand_pos, block){
+                colliding_with_smth = true
+                continue
+            }
+        }
+        for enemy in enemies{
+            if rl.CheckCollisionPointRec(rand_pos, get_rect(enemy.pos, enemy.size)){
+                colliding_with_smth = true
+                continue
+            }
+        }
+        if rl.CheckCollisionPointRec(rand_pos, get_rect(player.pos, player.size)){
+                colliding_with_smth = true
+                continue
+        }
+    }
+    return rand_pos
+}
+
+find_random_unoccupied_pos_one_coordinate :: proc(blocks: [dynamic]rl.Rectangle, enemies: [dynamic]Enemy, player: Player, y: f32) -> rl.Vector2{ colliding_with_smth := true
+    rand_pos: rl.Vector2
+
+    for colliding_with_smth{
+        colliding_with_smth = false
+
+        x := f32(rand.int31() % Width)
         rand_pos = rl.Vector2{x, y}
 
         for block in blocks{

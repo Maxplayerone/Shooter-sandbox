@@ -13,7 +13,6 @@ The game is inspired by Dani's first ludum dare entry (game called Fair 'n squar
 - improve enemy AI
 - add more enemies
 ## game loop
-- pausing
 - keeping track of how many enemies you have killed
 - wave-based gameplay with buying weapons and abilities after each round(?)
 - random terrain generation

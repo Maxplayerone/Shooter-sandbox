@@ -5,6 +5,11 @@ import rl "vendor:raylib"
 import "core:fmt"
 import "core:math"
 
+WeaponType :: enum{
+    Rifle,
+    Shotgun,
+}
+
 Player :: struct{
     color: rl.Color,
     size: f32,
@@ -20,6 +25,8 @@ Player :: struct{
     deg: f32,
 
     jump_time_before_check: int,
+
+    weapon_type: WeaponType,
 }
 
 player_rect :: proc(p: Player) -> rl.Rectangle{
@@ -95,14 +102,12 @@ player_update :: proc(p: ^Player, mo: ^MoveOutline, bullets: ^[dynamic]Bullet, b
     }
 
     if rl.IsMouseButtonPressed(.LEFT) && gui_state.hot_item == 0{
-        bullet := Bullet{}
-        bullet.pos = get_center(p.pos, p.size)
-        bullet.radius = 8.0
-        bullet.color = rl.WHITE
-        bullet.dir = vec_norm(dx, dy)
-        bullet.speed = 1200.0
-        bullet.owner = .Player
-        append(bullets, bullet)
+        switch p.weapon_type{
+            case .Rifle:
+                bullet_rifle_add(bullets, get_center(p.pos, p.size), vec_norm(dx, dy), p.color, .Player)
+            case .Shotgun:
+                bullet_shotgun_add(bullets, get_center(p.pos, p.size), vec_norm(dx, dy), p.color, .Player)
+        }
     }
 }
 

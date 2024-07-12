@@ -12,7 +12,11 @@ EnemyVel := rl.Vector2{400.0, 0.0}
 @(private="file")
 EnemyG := get_gravity({150.0, 200.0}, EnemyVel.x)
 @(private="file")
+EnemyColorDamaged :: rl.Color{255, 161, 161, 255} 
+@(private="file")
 EnemyColor :: rl.RED
+@(private="file")
+EnemyDamagedFrameTime :: 5 
 @(private="file")
 StartTimeBtwStates :: 1.0
 
@@ -73,6 +77,9 @@ Enemy :: struct{
 
     cur_state: EnemyState,
     time_btw_states: f32,
+
+    health: int,
+    cur_damaged_frame_time: int,
 }
 
 enemy_spawn :: proc(pos: rl.Vector2) -> Enemy{
@@ -84,11 +91,24 @@ enemy_spawn :: proc(pos: rl.Vector2) -> Enemy{
         size = EnemySize,
         time_btw_states = StartTimeBtwStates,
         cur_state = EnemyIdle{},
+        health = 100,
     }
+}
+
+enemy_damaged :: proc(enemy: ^Enemy){
+    enemy.cur_damaged_frame_time = EnemyDamagedFrameTime
 }
 
 enemy_update :: proc(e: ^Enemy, blocks: [dynamic]rl.Rectangle, player_pos: rl.Vector2, bullets: ^[dynamic]Bullet){
     dt := delta_time() 
+
+    if e.cur_damaged_frame_time > 0{
+        e.color = EnemyColorDamaged
+        e.cur_damaged_frame_time -= 1
+    }
+    else{
+        e.color = EnemyColor
+    }
 
     //(NOTE) the state in cur_state isn't saved
     //for EnemyJumping state

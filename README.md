@@ -18,4 +18,12 @@ The game is inspired by Dani's first ludum dare entry (game called Fair 'n squar
 - random terrain generation
 -small game map
 
+### The order of tasks
+- adding the 5 wepons listed
+- adding random terrain generation
+- adding wave based gameplay
+-adding a game map in the top-left corner
+- adding the ability to buy weapons
+- adding more enemies
+- adding abilities (?)
 

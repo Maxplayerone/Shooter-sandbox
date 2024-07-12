@@ -28,6 +28,7 @@ main :: proc(){
     player.g = get_gravity(dist, player.vel.x)
     player.gravity_jumping = player.g
     player.gravity_landing = 2 * player.g
+    player.weapon_type = .Shotgun
 
     player_mo := move_outline_create(true, rl.Color{player.color.r, player.color.g, player.color.b, 200})
 
@@ -42,7 +43,7 @@ main :: proc(){
 
     enemies: [dynamic]Enemy
     enemy_y := Height - 100.0
-    
+
     for i in 0..<3{
         append(&enemies, enemy_spawn(find_random_unoccupied_pos_one_coordinate(blocks, enemies, player, Height - 100.0)))
     }
@@ -102,7 +103,7 @@ main :: proc(){
                 }
 
                 if bullets[i].owner == .Enemy && rl.CheckCollisionPointRec(bullets[i].pos, get_rect(player.pos, player.size)){
-                    fmt.println("you ded")
+                    //fmt.println("you ded")
                 }
             }
         }
@@ -115,16 +116,21 @@ main :: proc(){
             for j in 0..<len(bullets){
 
                 if bullets[j].owner == .Player && rl.CheckCollisionCircleRec(bullets[j].pos, bullets[j].radius, get_rect(enemies[i].pos, enemies[i].size)){
-                    enemy_death_config.pos = enemies[i].pos
-                    append(&emitter_buf, emitter_create(enemy_death_config, enemy_death_config.lifetime, .DoNothing))
-
-                    //enemy spawn particle emitter
-                    enemy_spawn_config.pos = find_random_unoccupied_pos_one_coordinate(blocks, enemies, player, Height - 100.0)
-                    append(&emitter_buf, emitter_create(enemy_spawn_config, enemy_spawn_config.lifetime * 0.6, .SpawnEnemy))
-
-                    unordered_remove(&enemies, i)
+                    enemies[i].health -= bullets[j].damage
+                    enemy_damaged(&enemies[i])
                     unordered_remove(&bullets, j)
-                    break
+
+                    if enemies[i].health <= 0{
+                        enemy_death_config.pos = enemies[i].pos
+                        append(&emitter_buf, emitter_create(enemy_death_config, enemy_death_config.lifetime, .DoNothing))
+
+                        //enemy spawn particle emitter
+                        enemy_spawn_config.pos = find_random_unoccupied_pos_one_coordinate(blocks, enemies, player, Height - 100.0)
+                        append(&emitter_buf, emitter_create(enemy_spawn_config, enemy_spawn_config.lifetime * 0.6, .SpawnEnemy))
+
+                        unordered_remove(&enemies, i)
+                        break
+                    }
                 }
             }
         }

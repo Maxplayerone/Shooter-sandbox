@@ -88,7 +88,7 @@ enemy_spawn :: proc(pos: rl.Vector2) -> Enemy{
 }
 
 enemy_update :: proc(e: ^Enemy, blocks: [dynamic]rl.Rectangle, player_pos: rl.Vector2, bullets: ^[dynamic]Bullet){
-    dt := rl.GetFrameTime()
+    dt := delta_time() 
 
     //(NOTE) the state in cur_state isn't saved
     //for EnemyJumping state

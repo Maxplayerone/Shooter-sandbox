@@ -27,7 +27,7 @@ player_rect :: proc(p: Player) -> rl.Rectangle{
 }
 
 player_update :: proc(p: ^Player, mo: ^MoveOutline, bullets: ^[dynamic]Bullet, blocks: [dynamic]rl.Rectangle, gui_state: GuiState){
-    dt := rl.GetFrameTime()
+    dt := delta_time()
 
     //horizontal movement
     if rl.IsKeyDown(.D){
@@ -86,10 +86,13 @@ player_update :: proc(p: ^Player, mo: ^MoveOutline, bullets: ^[dynamic]Bullet, b
     p.jump_time_before_check -= 1
 
     //getting the angle between player and mouse
-    mouse_pos := rl.GetMousePosition()
-    dx := mouse_pos.x - p.pos.x
-    dy := mouse_pos.y - p.pos.y
-    p.deg = math.atan2(dy, dx) * (180.0 / 3.14) - 90.0
+    dx, dy : f32
+    if dt != 0.0{
+        mouse_pos := rl.GetMousePosition()
+        dx = mouse_pos.x - p.pos.x
+        dy = mouse_pos.y - p.pos.y
+        p.deg = math.atan2(dy, dx) * (180.0 / 3.14) - 90.0
+    }
 
     if rl.IsMouseButtonPressed(.LEFT) && gui_state.hot_item == 0{
         bullet := Bullet{}

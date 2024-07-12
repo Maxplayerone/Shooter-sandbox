@@ -17,7 +17,8 @@ Bullet :: struct{
 }
 
 bullet_update :: proc(b: ^Bullet){
-    b.pos += b.dir * b.speed * rl.GetFrameTime()
+    dt := delta_time()
+    b.pos += b.dir * b.speed * dt
 }
 
 bullet_render :: proc(b: Bullet){

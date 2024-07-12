@@ -72,13 +72,22 @@ main :: proc(){
     enemy_spawn_config.lifetime = 1.6
     enemy_spawn_config.size = 16.0
 
+    game_paused := false
+
     for !rl.WindowShouldClose(){
 
         //player update
         player_update(&player, &player_mo, &bullets, blocks, gui_state)
 
         if rl.IsKeyPressed(.Q){
-            fmt.println("pause game")
+
+            game_paused = !game_paused
+            if game_paused{
+                set_delta_time(0.0)
+            }
+            else{
+                set_delta_time(1234.0)
+            }
         }
         //bullets update
         for i in 0..<len(bullets){
@@ -118,15 +127,17 @@ main :: proc(){
         }
 
         //particles update
-        for &emitter, i in emitter_buf{
-            emitter_effect := emitter_update(&emitter, blocks)
-            switch emitter_effect{
-                case .DoNothingNoRemove: 
-                case .DoNothing:
-                    unordered_remove(&emitter_buf, i)
-                case .SpawnEnemy:
-                    append(&enemies, enemy_spawn(emitter.config.pos))
-                    unordered_remove(&emitter_buf, i)
+        if dt != 0.0{
+            for &emitter, i in emitter_buf{
+                emitter_effect := emitter_update(&emitter, blocks)
+                switch emitter_effect{
+                    case .DoNothingNoRemove: 
+                    case .DoNothing:
+                        unordered_remove(&emitter_buf, i)
+                    case .SpawnEnemy:
+                        append(&enemies, enemy_spawn(emitter.config.pos))
+                        unordered_remove(&emitter_buf, i)
+                }
             }
         }
 

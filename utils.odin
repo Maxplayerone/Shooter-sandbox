@@ -193,3 +193,18 @@ abs :: proc(v: f32) -> f32{
         return v * -1.0
     }
 }
+
+dt := f32(1234.0)
+delta_time :: proc() -> f32{
+    //random setup number
+    if dt == 1234.0{
+        return rl.GetFrameTime()
+    }
+    else{
+        return dt
+    }
+}
+
+set_delta_time :: proc(v: f32){
+    dt = v
+}

@@ -184,3 +184,12 @@ find_random_unoccupied_pos :: proc(blocks: [dynamic]rl.Rectangle, enemies: [dyna
     }
     return rand_pos
 }
+
+abs :: proc(v: f32) -> f32{
+    if v > 0.0{
+        return v
+    }
+    else{
+        return v * -1.0
+    }
+}

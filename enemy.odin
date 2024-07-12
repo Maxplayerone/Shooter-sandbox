@@ -2,20 +2,124 @@ package main
 
 import rl "vendor:raylib"
 
+import "core:math/rand"
+import "core:fmt"
+
+@(private="file")
+EnemySize :: 40
+@(private="file")
+EnemyVel := rl.Vector2{400.0, 0.0}
+@(private="file")
+EnemyG := get_gravity({150.0, 200.0}, 400.0)
+@(private="file")
+EnemyColor :: rl.RED
+@(private="file")
+StartTimeBtwStates :: 1.0
+
+EnemyIdle :: struct{}
+EnemyIdleDefault :: EnemyIdle{}
+
+EnemyShooting :: struct{}
+EnemyShootingDefault :: EnemyShooting{}
+
+EnemyMoving :: struct{
+    max_move_dist: f32,
+    move_dist: f32,
+    min_dist_to_player: f32,
+}
+EnemyMovingDefault :: EnemyMoving{
+    max_move_dist = 200.0,
+    min_dist_to_player = 150.0,
+}
+
+EnemyJumping :: struct{}
+EnemyJumpingDefault :: EnemyJumping{}
+
+EnemyState :: union{
+    EnemyIdle,
+    EnemyShooting,
+    EnemyMoving,
+    EnemyJumping,
+}
+
+EnemyStates := [?]EnemyState{
+    EnemyIdleDefault,
+    EnemyShootingDefault,
+    EnemyMovingDefault,
+    EnemyJumpingDefault,
+}
+
 Enemy :: struct{
     pos: rl.Vector2,
     vel: rl.Vector2,
     g: f32,
+    dir: rl.Vector2,
 
     size: f32,
     color: rl.Color,
 
-    dir: rl.Vector2,
+    cur_state: EnemyState,
+    time_btw_states: f32,
 }
 
+enemy_spawn :: proc(pos: rl.Vector2) -> Enemy{
+    return Enemy{
+        pos = pos,
+        vel = EnemyVel,
+        g = EnemyG,
+        color = EnemyColor,
+        size = EnemySize,
+        time_btw_states = StartTimeBtwStates,
+        cur_state = EnemyIdle{},
+    }
+}
 
 enemy_update :: proc(e: ^Enemy, blocks: [dynamic]rl.Rectangle, player_pos: rl.Vector2){
     dt := rl.GetFrameTime()
+
+    //(NOTE) the state in cur_state isn't saved
+    switch &s in e.cur_state{
+        case EnemyIdle:
+            e.time_btw_states -= dt
+            if e.time_btw_states < 0.0{
+                idx := rand.int31() % (len(EnemyStates) -1) + 1
+                e.cur_state = EnemyStates[idx]
+                e.time_btw_states = StartTimeBtwStates
+            }
+        case EnemyJumping:
+            e.time_btw_states -= dt
+            if e.time_btw_states < 0.0{
+                idx := rand.int31() % (len(EnemyStates) -1) + 1
+                e.cur_state = EnemyStates[idx]
+                e.time_btw_states = StartTimeBtwStates
+            }
+        case EnemyMoving:
+            dist_to_player := player_pos.x - e.pos.x
+            sign := dist_to_player > 0.0 ? 1.0 : -1.0
+            e.pos.x += e.vel.x * dt * f32(sign)
+
+            if abs(player_pos.x - e.pos.x) < s.min_dist_to_player{
+                idx := rand.int31() % len(EnemyStates)
+                e.cur_state = EnemyStates[idx]
+            }
+
+            s.move_dist += e.vel.x * dt * f32(sign)
+
+            if abs(s.move_dist) > s.max_move_dist{
+                idx := rand.int31() % len(EnemyStates)
+                e.cur_state = EnemyStates[idx]
+            }
+        case EnemyShooting:
+            e.time_btw_states -= dt
+            if e.time_btw_states < 0.0{
+                idx := rand.int31() % (len(EnemyStates) -1) + 1
+                e.cur_state = EnemyStates[idx]
+                e.time_btw_states = StartTimeBtwStates
+            }
+    }
+
+
+    fmt.println("enemy is in ", e.cur_state, " state")
 
     if is_colliding, floor_y := floor_collission(blocks, {e.pos.x, e.pos.y + e.size + 1.0}, e.size); is_colliding{
         e.pos.y = floor_y - e.size

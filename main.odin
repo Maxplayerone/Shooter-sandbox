@@ -20,20 +20,14 @@ main :: proc(){
 
     player := Player{}
     player.size = 40.0
-    //player.pos = rl.Vector2{Width / 2 - player.size / 2, Height / 2 - player.size / 2 + 100.0}
     player.pos = rl.Vector2{750.0, 260.0}
     player.color = rl.Color{125, 255, 207, 255}
-    player.speed.x = 400.0
-
-    jump_height:f32 = 200.0
-    jump_dist: f32 = 150.0
-
-    player.start_vert_speed = 2 * jump_height * player.speed.x / jump_dist
-    player.g = - 2 * jump_height * (player.speed.x * player.speed.x) / (jump_dist * jump_dist)
+    player.vel.x = 400.0
+    dist := rl.Vector2{150.0, 200.0}
+    player.start_vert_speed = get_ver_speed(dist, player.vel.x)
+    player.g = get_gravity(dist, player.vel.x)
     player.gravity_jumping = player.g
     player.gravity_landing = 2 * player.g
-
-    rect := get_rect(player.pos, player.size)
 
     player_mo := move_outline_create(true, rl.Color{player.color.r, player.color.g, player.color.b, 200})
 
@@ -43,39 +37,16 @@ main :: proc(){
     append(&blocks, rl.Rectangle{0.0, Height - 100.0 + player.size, Width, 100.0})
     append(&blocks, rl.Rectangle{700.0, 300.0, 150.0, 50.0})
 
-    EnemySize :: 40
-    EnemiesMinLen :: 3
-    EnemyVel := rl.Vector2{player.speed.x, 0.0}
-    EnemyG := get_gravity({jump_dist, jump_height}, player.speed.x)
     enemies: [dynamic]Enemy
-    {
-        enemy := Enemy{
-            pos = rl.Vector2{200.0, Height - 100.0},
-            size = EnemySize,
-            color = rl.RED,
-            vel = EnemyVel,
-            g = EnemyG,
-        }
-        append(&enemies, enemy)
-    }
-    {
-        enemy := Enemy{
-            pos = rl.Vector2{300.0, Height - 100.0},
-            size = EnemySize,
-            color = rl.RED,
-            vel = EnemyVel,
-            g = EnemyG,
-        }
-        append(&enemies, enemy)
-    }
+    append(&enemies, enemy_spawn({200.0, Height - 100.0}))
+    //append(&enemies, enemy_spawn({300.0, Height - 100.0}))
 
     gui_state := GuiState{}
     window_rect := rl.Rectangle{11, 10, 427, 621}
     gui_rects := generate_rects_for_window(window_rect, 5)
     command: [dynamic]rl.KeyboardKey
 
-    particles: [dynamic]Particle
-
+    emitter_buf: [dynamic]Emitter
 
     enemy_death_config := ParticleConfig{}
     enemy_death_config.pos = rl.Vector2{700.0, 590.0}
@@ -90,7 +61,6 @@ main :: proc(){
     enemy_death_config.vel_offset = 50.0
     enemy_death_config.vel_offset_jump = 5.0
 
-
     enemy_spawn_config := ParticleConfig{}
     enemy_spawn_config.pos = {700.0, 590.0}
     enemy_spawn_config.vel = {50.0, 0.0}
@@ -98,8 +68,6 @@ main :: proc(){
     enemy_spawn_config.color = rl.Color{255, 0, 0, 125}
     enemy_spawn_config.lifetime = 1.6
     enemy_spawn_config.size = 16.0
-
-    emitter_buf: [dynamic]Emitter
 
     for !rl.WindowShouldClose(){
 
@@ -146,14 +114,7 @@ main :: proc(){
                 case .DoNothing:
                     unordered_remove(&emitter_buf, i)
                 case .SpawnEnemy:
-                    e := Enemy{
-                        pos = emitter.config.pos,
-                        size = EnemySize,
-                        g = EnemyG,
-                        vel = EnemyVel,
-                        color = rl.RED,
-                    }
-                    append(&enemies, e)
+                    append(&enemies, enemy_spawn(emitter.config.pos))
                     unordered_remove(&emitter_buf, i)
             }
         }
@@ -211,7 +172,6 @@ main :: proc(){
     delete(blocks)
     delete(enemies)
     //delete(command)
-    delete(particles)
     delete(gui_rects)
     delete(emitter_buf)
 

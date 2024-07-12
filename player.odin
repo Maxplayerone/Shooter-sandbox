@@ -10,7 +10,7 @@ Player :: struct{
     size: f32,
 
     pos: rl.Vector2,
-    speed: rl.Vector2,
+    vel: rl.Vector2,
     start_vert_speed: f32,
 
     g: f32,
@@ -31,39 +31,39 @@ player_update :: proc(p: ^Player, mo: ^MoveOutline, bullets: ^[dynamic]Bullet, b
 
     //horizontal movement
     if rl.IsKeyDown(.D){
-        new_pos := p.pos.x + p.speed.x * dt
+        new_pos := p.pos.x + p.vel.x * dt
 
         if !wall_collission(blocks, {new_pos + p.size, p.pos.y}){
             p.pos.x = new_pos
         }
     }
     if rl.IsKeyDown(.A){
-        new_pos := p.pos.x - p.speed.x * dt
+        new_pos := p.pos.x - p.vel.x * dt
 
         if !wall_collission(blocks, {new_pos, p.pos.y}){
             p.pos.x = new_pos
         }
     }
 
-    new_y_pos := p.pos.y - 0.5 * p.g * dt * dt + p.speed.y * dt
+    new_y_pos := p.pos.y - 0.5 * p.g * dt * dt + p.vel.y * dt
     if is_colliding, new_y := ceiling_collission(blocks, {p.pos.x, new_y_pos, p.size, 0.0}); is_colliding{
         p.g = p.gravity_landing
-        p.speed.y = 0.0
+        p.vel.y = 0.0
         p.pos.y = new_y 
     }
 
     //testing for collission with the floor
     if is_colliding, floor_y := floor_collission(blocks, {p.pos.x, p.pos.y + p.size + 1.0}, p.size); is_colliding && p.jump_time_before_check <= 0{
         p.pos.y = floor_y - p.size
-        p.speed.y = 0 //we are treating every surface like it's elevated
+        p.vel.y = 0 //we are treating every surface like it's elevated
 
         move_outline_record_breakpoint(mo)
     }
     else{
-        p.pos.y -= 0.5 * p.g * dt * dt + p.speed.y * dt
-        p.speed.y += p.g * dt
+        p.pos.y -= 0.5 * p.g * dt * dt + p.vel.y * dt
+        p.vel.y += p.g * dt
 
-        if p.speed.y > 0{
+        if p.vel.y > 0{
             p.g = p.gravity_jumping
         }
         else{
@@ -74,11 +74,11 @@ player_update :: proc(p: ^Player, mo: ^MoveOutline, bullets: ^[dynamic]Bullet, b
     }
 
     if rl.IsKeyPressed(.SPACE){
-        p.speed.y = p.start_vert_speed
+        p.vel.y = p.start_vert_speed
         p.g = p.gravity_jumping
 
-        p.pos.y -= 0.5 * p.g * dt * dt + p.speed.y * dt
-        p.speed.y += p.g * dt
+        p.pos.y -= 0.5 * p.g * dt * dt + p.vel.y * dt
+        p.vel.y += p.g * dt
 
         p.jump_time_before_check = 5
     }

@@ -24,8 +24,6 @@ Player :: struct{
 
     deg: f32,
 
-    jump_time_before_check: int,
-
     weapon_type: WeaponType,
 }
 
@@ -36,61 +34,22 @@ player_rect :: proc(p: Player) -> rl.Rectangle{
 player_update :: proc(p: ^Player, mo: ^MoveOutline, bullets: ^[dynamic]Bullet, blocks: [dynamic]rl.Rectangle, gui_state: GuiState){
     dt := delta_time()
 
-    //horizontal movement
+    move: rl.Vector2
     if rl.IsKeyDown(.D){
-        new_pos := p.pos.x + p.vel.x * dt
-
-        if !wall_collission(blocks, {new_pos + p.size, p.pos.y}){
-            p.pos.x = new_pos
-        }
+        move.x = p.vel.x * dt
     }
     if rl.IsKeyDown(.A){
-        new_pos := p.pos.x - p.vel.x * dt
-
-        if !wall_collission(blocks, {new_pos, p.pos.y}){
-            p.pos.x = new_pos
-        }
+        move.x = -p.vel.x * dt
     }
-
-    new_y_pos := p.pos.y - 0.5 * p.g * dt * dt + p.vel.y * dt
-    if is_colliding, new_y := ceiling_collission(blocks, {p.pos.x, new_y_pos, p.size, 0.0}); is_colliding{
-        p.g = p.gravity_landing
-        p.vel.y = 0.0
-        p.pos.y = new_y 
-    }
-
-    //testing for collission with the floor
-    if is_colliding, floor_y := floor_collission(blocks, {p.pos.x, p.pos.y + p.size + 1.0}, p.size); is_colliding && p.jump_time_before_check <= 0{
-        p.pos.y = floor_y - p.size
-        p.vel.y = 0 //we are treating every surface like it's elevated
-
-        move_outline_record_breakpoint(mo)
-    }
-    else{
-        p.pos.y -= 0.5 * p.g * dt * dt + p.vel.y * dt
-        p.vel.y += p.g * dt
-
-        if p.vel.y > 0{
-            p.g = p.gravity_jumping
-        }
-        else{
-            p.g = p.gravity_landing
-        }
-
-        move_outline_record(mo, get_center(p.pos, p.size))
-    }
-
     if rl.IsKeyPressed(.SPACE){
         p.vel.y = p.start_vert_speed
-        p.g = p.gravity_jumping
-
-        p.pos.y -= 0.5 * p.g * dt * dt + p.vel.y * dt
-        p.vel.y += p.g * dt
-
-        p.jump_time_before_check = 5
     }
+    move.y = -(0.5 * p.g * dt * dt + p.vel.y * dt)
 
-    p.jump_time_before_check -= 1
+    move = resolve_collisions(blocks, move, p.pos, p.size, &p.vel.y)
+
+    p.pos += move
+    p.vel.y += p.g * dt
 
     //getting the angle between player and mouse
     dx, dy : f32

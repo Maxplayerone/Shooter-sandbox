@@ -5,7 +5,6 @@ The game is inspired by Dani's first ludum dare entry (game called Fair 'n squar
 # DEVELOPMENT ROADMAP
 ## WEAPONS
 - laser
-- shotgun
 -rocket launcher
 - granade launcher
 - magic staff

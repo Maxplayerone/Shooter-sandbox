@@ -236,3 +236,30 @@ delta_time :: proc() -> f32{
 set_delta_time :: proc(v: f32){
     dt = v
 }
+
+resolve_collisions :: proc(blocks: [dynamic]rl.Rectangle, move: rl.Vector2, pos: rl.Vector2, size: f32, yvel: ^f32) -> rl.Vector2{
+    move := move
+
+    for block in blocks{
+        if rl.CheckCollisionRecs(get_rect({pos.x + move.x, pos.y}, size), block){
+            if move.x > 0.0{
+                move.x = block.x - size - pos.x
+            }
+            if move.x < 0.0{
+                move.x = block.x + block.width - pos.x
+            }
+        }
+        if rl.CheckCollisionRecs(get_rect({pos.x, pos.y + move.y}, size), block){
+            if move.y > 0.0{
+                move.y = block.y - size - pos.y
+            }
+            if move.y < 0.0{
+                move.y = block.y + block.height - pos.y
+            }
+
+            yvel^ = 0
+        }
+    }
+
+    return move
+}

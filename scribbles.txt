@@ -3,3 +3,5 @@ to-do
 -repiar respawning with gravity particles
 -continue with the article
 -add delay between updating and rendering particles when we get to the emitter
+
+12.07- 38min

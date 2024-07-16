@@ -85,6 +85,7 @@ main :: proc(){
         offset = {Width / 2, Height / 2},
         zoom = 1.0,
     }
+    camera_free_move := false
 
     for !rl.WindowShouldClose(){
 
@@ -144,7 +145,7 @@ main :: proc(){
         }
 
         //particles update
-        if dt != 0.0{
+        if delta_time() != 0.0{
             for &emitter, i in emitter_buf{
                 emitter_effect := emitter_update(&emitter, blocks)
                 switch emitter_effect{
@@ -159,24 +160,34 @@ main :: proc(){
         }
 
         //---------------debug------------------------------------------------------
-        if rl.IsKeyPressed(.O){
-            player_mo.only_draw_last_segment = !player_mo.only_draw_last_segment
-        }
         if rl.IsKeyPressed(.P){
-            clear(&player_mo.breakpoints)
-            clear(&player_mo.buf)
+            camera_free_move = !camera_free_move
+            if camera_free_move{
+                set_delta_time(0.0)
+            }
+            else{
+                reset_set_delta_time()
+            }
         }
-        if rl.IsKeyDown(.I){
-            camera.target.y -= player.vel.x * delta_time()
-        }
-        if rl.IsKeyDown(.K){
-            camera.target.y += player.vel.x * delta_time()
-        }
-        if rl.IsKeyDown(.J){
-            camera.target.x -= player.vel.x * delta_time()
-        }
-        if rl.IsKeyDown(.L){
-            camera.target.x += player.vel.x * delta_time()
+        if camera_free_move{
+            if rl.IsKeyDown(.W){
+                camera.target.y -= 2 * player.vel.x * rl.GetFrameTime() 
+            }
+            if rl.IsKeyDown(.S){
+                camera.target.y += 2 * player.vel.x * rl.GetFrameTime()
+            }
+            if rl.IsKeyDown(.A){
+                camera.target.x -= 2 * player.vel.x * rl.GetFrameTime()
+            }
+            if rl.IsKeyDown(.D){
+                camera.target.x += 2 * player.vel.x * rl.GetFrameTime()
+            }
+            if rl.IsKeyDown(.K){
+                camera.zoom +=  1 * rl.GetFrameTime()
+            }
+            if rl.IsKeyDown(.L){
+                camera.zoom -= 1 * rl.GetFrameTime()
+            }
         }
         //-----------------------------------------------------------
 
@@ -216,7 +227,7 @@ main :: proc(){
         rl.EndMode2D()
 
         rl.DrawFPS(0, 0)
-        
+
         rl.EndDrawing()
 
         free_all(context.temp_allocator)

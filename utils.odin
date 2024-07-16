@@ -222,6 +222,7 @@ abs :: proc(v: f32) -> f32{
     }
 }
 
+@(private="file")
 dt := f32(1234.0)
 delta_time :: proc() -> f32{
     //random setup number
@@ -235,6 +236,10 @@ delta_time :: proc() -> f32{
 
 set_delta_time :: proc(v: f32){
     dt = v
+}
+
+reset_set_delta_time :: proc(){
+    dt = 1324
 }
 
 resolve_collisions :: proc(blocks: [dynamic]rl.Rectangle, move: rl.Vector2, pos: rl.Vector2, size: f32, yvel: ^f32) -> rl.Vector2{

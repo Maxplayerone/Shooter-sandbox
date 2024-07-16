@@ -39,14 +39,16 @@ main :: proc(){
     append(&blocks, rl.Rectangle{700.0, 300.0, 150.0, 50.0})
     append(&blocks, rl.Rectangle{-10.0, 0.0, 0.0, Height})
     append(&blocks, rl.Rectangle{Width, 0.0, Width + 10.0, Height})
-    append(&blocks, rl.Rectangle{0.0, -10.0, Width, 0.0})
+    //append(&blocks, rl.Rectangle{0.0, -10.0, Width, 0.0})
 
     enemies: [dynamic]Enemy
     enemy_y := Height - 100.0
 
+    /*
     for i in 0..<3{
         append(&enemies, enemy_spawn(find_random_unoccupied_pos_one_coordinate(blocks, enemies, player, Height - 100.0)))
     }
+        */
 
     gui_state := GuiState{}
     window_rect := rl.Rectangle{11, 10, 427, 621}
@@ -78,13 +80,19 @@ main :: proc(){
 
     game_paused := false
 
+    camera := rl.Camera2D{
+        target = {player.pos.x, Height / 2},
+        offset = {Width / 2, Height / 2},
+        zoom = 1.0,
+    }
+
     for !rl.WindowShouldClose(){
 
         //player update
         player_update(&player, &player_mo, &bullets, blocks, gui_state)
+        camera.target.x += player.frame_displacement.x
 
         if rl.IsKeyPressed(.Q){
-
             game_paused = !game_paused
             if game_paused{
                 set_delta_time(0.0)
@@ -150,7 +158,7 @@ main :: proc(){
             }
         }
 
-        //debug------------------------------------------------------
+        //---------------debug------------------------------------------------------
         if rl.IsKeyPressed(.O){
             player_mo.only_draw_last_segment = !player_mo.only_draw_last_segment
         }
@@ -158,9 +166,22 @@ main :: proc(){
             clear(&player_mo.breakpoints)
             clear(&player_mo.buf)
         }
+        if rl.IsKeyDown(.I){
+            camera.target.y -= player.vel.x * delta_time()
+        }
+        if rl.IsKeyDown(.K){
+            camera.target.y += player.vel.x * delta_time()
+        }
+        if rl.IsKeyDown(.J){
+            camera.target.x -= player.vel.x * delta_time()
+        }
+        if rl.IsKeyDown(.L){
+            camera.target.x += player.vel.x * delta_time()
+        }
         //-----------------------------------------------------------
 
         rl.BeginDrawing()
+        rl.BeginMode2D(camera)
         rl.ClearBackground(rl.BLACK)
 
         //enemies
@@ -191,8 +212,11 @@ main :: proc(){
         move_outline_render(player_mo)
 
         //gui
-        rl.DrawFPS(0, 0)
 
+        rl.EndMode2D()
+
+        rl.DrawFPS(0, 0)
+        
         rl.EndDrawing()
 
         free_all(context.temp_allocator)

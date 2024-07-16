@@ -17,6 +17,7 @@ Player :: struct{
     pos: rl.Vector2,
     vel: rl.Vector2,
     start_vert_speed: f32,
+    frame_displacement: rl.Vector2,
 
     g: f32,
     gravity_landing: f32,
@@ -50,6 +51,7 @@ player_update :: proc(p: ^Player, mo: ^MoveOutline, bullets: ^[dynamic]Bullet, b
 
     p.pos += move
     p.vel.y += p.g * dt
+    p.frame_displacement = move
 
     //getting the angle between player and mouse
     dx, dy : f32
